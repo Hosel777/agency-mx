@@ -1,0 +1,138 @@
+-- ============================================================================
+-- AGENCY MX — Esquema Inicial para Supabase
+-- ============================================================================
+
+-- Tabla de solicitudes de clientes
+CREATE TABLE IF NOT EXISTS public.client_requests (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    project_type TEXT NOT NULL,
+    client_name TEXT,
+    budget NUMERIC,
+    deadline DATE,
+    references TEXT,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'review', 'approved', 'completed', 'rejected')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Tabla de mensajes de agentes
+CREATE TABLE IF NOT EXISTS public.agent_messages (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    request_id UUID REFERENCES public.client_requests(id) ON DELETE CASCADE,
+    agent_id TEXT NOT NULL,
+    agent_name TEXT NOT NULL,
+    role TEXT DEFAULT 'assistant',
+    content TEXT NOT NULL,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Tabla de entregables
+CREATE TABLE IF NOT EXISTS public.deliverables (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    request_id UUID REFERENCES public.client_requests(id) ON DELETE CASCADE,
+    agent_id TEXT NOT NULL,
+    agent_name TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    content TEXT,
+    file_url TEXT,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'approved', 'rejected')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Tabla de agentes
+CREATE TABLE IF NOT EXISTS public.agents (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    role TEXT,
+    department TEXT,
+    level INTEGER DEFAULT 1,
+    description TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Índices
+CREATE INDEX IF NOT EXISTS idx_client_requests_user ON public.client_requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_client_requests_status ON public.client_requests(status);
+CREATE INDEX IF NOT EXISTS idx_agent_messages_request ON public.agent_messages(request_id);
+CREATE INDEX IF NOT EXISTS idx_agent_messages_agent ON public.agent_messages(agent_id);
+CREATE INDEX IF NOT EXISTS idx_deliverables_request ON public.deliverables(request_id);
+
+-- RLS Policies
+ALTER TABLE public.client_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.agent_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.deliverables ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.agents ENABLE ROW LEVEL SECURITY;
+
+-- Políticas para client_requests
+CREATE POLICY "users_see_own_requests" ON public.client_requests
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "users_insert_own_requests" ON public.client_requests
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "users_update_own_requests" ON public.client_requests
+    FOR UPDATE USING (auth.uid() = user_id);
+
+-- Políticas para agent_messages
+CREATE POLICY "users_see_own_agent_messages" ON public.agent_messages
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.client_requests
+            WHERE id = agent_messages.request_id AND user_id = auth.uid()
+        )
+    );
+
+-- Políticas para deliverables
+CREATE POLICY "users_see_own_deliverables" ON public.deliverables
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.client_requests
+            WHERE id = deliverables.request_id AND user_id = auth.uid()
+        )
+    );
+
+-- Políticas para agents (público de solo lectura)
+CREATE POLICY "agents_readable_by_all" ON public.agents
+    FOR SELECT USING (true);
+
+-- Poblar agentes iniciales
+INSERT INTO public.agents (id, name, role, department, level) VALUES
+    ('orchestrator', 'Agents Orchestrator', 'Gerente General', 'Gerencia', 1),
+    ('trend-researcher', 'Trend Researcher', 'Investigador de mercado', 'Estrategia & Research', 2),
+    ('product-manager', 'Product Manager', 'Define features y roadmap', 'Estrategia & Research', 2),
+    ('strategy', 'Strategy', 'Posicionamiento y plan', 'Estrategia & Research', 2),
+    ('cultural-intelligence', 'Cultural Intelligence', 'Evaluación cultural', 'Estrategia & Research', 2),
+    ('lead-gen-strategist', 'Lead Gen Strategist', 'Diseño de ofertas', 'Estrategia & Research', 2),
+    ('ui-designer', 'UI Designer', 'Diseño visual', 'Producto & Diseño', 3),
+    ('ux-researcher', 'UX Researcher', 'Pruebas de usuario', 'Producto & Diseño', 3),
+    ('brand-guardian', 'Brand Guardian', 'Identidad de marca', 'Producto & Diseño', 3),
+    ('visual-storyteller', 'Visual Storyteller', 'Narrativa visual', 'Producto & Diseño', 3),
+    ('content-creator', 'Content Creator', 'Redacción de contenidos', 'Marketing & Contenido', 4),
+    ('social-media', 'Social Media Strategist', 'Estrategia social', 'Marketing & Contenido', 4),
+    ('seo-specialist', 'SEO Specialist', 'Optimización SEO', 'Marketing & Contenido', 4),
+    ('email-marketing', 'Email Marketing Strategist', 'Email campaigns', 'Marketing & Contenido', 4),
+    ('growth-hacker', 'Growth Hacker', 'Crecimiento viral', 'Marketing & Contenido', 4),
+    ('ppc-strategist', 'PPC Campaign Strategist', 'Arquitectura de ads', 'Paid Media', 5),
+    ('search-analyst', 'Search Query Analyst', 'Análisis de keywords', 'Paid Media', 5),
+    ('ad-creative', 'Ad Creative Strategist', 'Creativas publicitarias', 'Paid Media', 5),
+    ('frontend-dev', 'Frontend Developer', 'React/Vue, UI components', 'Ingeniería', 6),
+    ('backend-architect', 'Backend Architect', 'APIs, DB, escalabilidad', 'Ingeniería', 6),
+    ('devops', 'DevOps Automator', 'CI/CD, infraestructura', 'Ingeniería', 6),
+    ('ai-engineer', 'AI Engineer', 'Modelos ML, integración AI', 'Ingeniería', 6),
+    ('reality-checker', 'Reality Checker', 'Certificación de calidad', 'Testing & QA', 7),
+    ('api-tester', 'API Tester', 'Validación de APIs', 'Testing & QA', 7),
+    ('outbound-strategist', 'Outbound Strategist', 'Prospección', 'Ventas & CRM', 8),
+    ('deal-strategist', 'Deal Strategist', 'Estrategia de deals', 'Ventas & CRM', 8),
+    ('finance-tracker', 'Finance Tracker', 'Cash flow', 'Finanzas & Legal', 9),
+    ('legal-compliance', 'Legal Compliance', 'Regulaciones', 'Finanzas & Legal', 9),
+    ('analytics-reporter', 'Analytics Reporter', 'Dashboards y KPIs', 'Finanzas & Legal', 9),
+    ('support-responder', 'Support Responder', 'Atención al cliente', 'Soporte & Operaciones', 10),
+    ('project-shepherd', 'Project Shepherd', 'Coordinación', 'Soporte & Operaciones', 10)
+ON CONFLICT (id) DO NOTHING;
