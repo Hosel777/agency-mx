@@ -6,10 +6,12 @@ import RequestDetail from './pages/RequestDetail'
 import Agents from './pages/Agents'
 import Approvals from './pages/Approvals'
 import Settings from './pages/Settings'
+import Login from './pages/Login'
 
 export default function App() {
   return (
     <Routes>
+      <Route path="/login" element={<Login />} />
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/nueva-solicitud" element={<NewRequest />} />

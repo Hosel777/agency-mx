@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabase'
+import { startOrchestration } from '../services/api'
 import toast from 'react-hot-toast'
-import { Send, ArrowLeft } from 'lucide-react'
+import { Send, ArrowLeft, Loader2 } from 'lucide-react'
 
 const projectTypes = [
   'Landing Page', 'Campaña de Ads', 'Rediseño de Marca',
@@ -36,7 +37,7 @@ export default function NewRequest() {
     }
 
     setSubmitting(true)
-    const { error } = await supabase.from('client_requests').insert({
+    const { data: newRequest, error } = await supabase.from('client_requests').insert({
       title: form.title,
       description: form.description,
       project_type: form.projectType,
@@ -45,16 +46,21 @@ export default function NewRequest() {
       deadline: form.deadline || null,
       refs: form.refs,
       status: 'pending',
-    })
-
-    setSubmitting(false)
+    }).select().single()
 
     if (error) {
+      setSubmitting(false)
       toast.error('Error al crear la solicitud')
       return
     }
 
     toast.success('Solicitud creada — los agentes comienzan a trabajar')
+
+    startOrchestration(newRequest.id).catch(err => {
+      console.error('Error al iniciar orquestación:', err)
+    })
+
+    setSubmitting(false)
     navigate('/')
   }
 

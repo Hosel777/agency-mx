@@ -57,3 +57,27 @@ export async function approveDeliverable(id) {
     .eq('id', id)
   return { error }
 }
+
+// --- Orchestration API (llama al backend) ---
+
+function getApiKey() {
+  return localStorage.getItem('agency_mx_anthropic_key') || undefined
+}
+
+export async function startOrchestration(requestId) {
+  const response = await fetch('/api/orchestrate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requestId, apiKey: getApiKey() })
+  })
+  return response.json()
+}
+
+export async function sendChatMessage(requestId, message, agentId = null) {
+  const response = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requestId, message, agentId, apiKey: getApiKey() })
+  })
+  return response.json()
+}

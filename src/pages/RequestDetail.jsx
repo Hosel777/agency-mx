@@ -5,6 +5,7 @@ import {
   MessageSquare, Eye, Loader2
 } from 'lucide-react'
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/constants'
+import { supabase } from '../services/supabase'
 import { fetchRequest, fetchDeliverables, fetchAgentMessages, updateRequestStatus } from '../services/api'
 import AgentChat from '../components/agents/AgentChat'
 import DeliverablePreview from '../components/common/DeliverablePreview'
