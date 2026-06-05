@@ -163,3 +163,23 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Sincronizar agentes faltantes usando los archivos agents/ .md (opcional - para referencia)
 -- Total: 41 agentes en SQL (31 originales + 10 añadidos)
+
+-- ==========================================
+-- Supabase Storage (bucket para archivos)
+-- ==========================================
+-- Ejecutar en el SQL Editor de Supabase:
+-- INSERT INTO storage.buckets (id, name, public) VALUES ('agency-files', 'agency-files', false);
+--
+-- Política para subir archivos (usuarios autenticados):
+-- CREATE POLICY "users_upload_own_files" ON storage.objects
+--     FOR INSERT WITH CHECK (
+--         auth.role() = 'authenticated'
+--         AND bucket_id = 'agency-files'
+--     );
+--
+-- Política para leer archivos (usuarios autenticados):
+-- CREATE POLICY "users_read_files" ON storage.objects
+--     FOR SELECT USING (
+--         auth.role() = 'authenticated'
+--         AND bucket_id = 'agency-files'
+--     );

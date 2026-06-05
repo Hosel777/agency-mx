@@ -19,7 +19,8 @@ const TYPE_LABELS = {
 
 export default function DeliverablePreview({ deliverable, onClose, onDeliver }) {
   const [tab, setTab] = useState('preview')
-  const Icon = TYPE_ICONS[deliverable.type] || FileText
+  const type = deliverable.deliverable_type || deliverable.type || 'text'
+  const Icon = TYPE_ICONS[type] || FileText
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
@@ -33,7 +34,7 @@ export default function DeliverablePreview({ deliverable, onClose, onDeliver }) 
             <div>
               <h2 className="font-semibold text-lg">{deliverable.name}</h2>
               <p className="text-sm text-gray-500">
-                {TYPE_LABELS[deliverable.type]} — por {deliverable.agent_name}
+                {TYPE_LABELS[type]} — por {deliverable.agent_name}
               </p>
             </div>
           </div>
@@ -122,7 +123,9 @@ export default function DeliverablePreview({ deliverable, onClose, onDeliver }) 
 }
 
 function PreviewContent({ deliverable }) {
-  switch (deliverable.type) {
+  const type = deliverable.deliverable_type || deliverable.type || 'text'
+
+  switch (type) {
     case 'html':
       return (
         <div className="border rounded-lg overflow-hidden bg-white">

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabase'
 import { startOrchestration } from '../services/api'
 import toast from 'react-hot-toast'
-import { Send, ArrowLeft, Loader2 } from 'lucide-react'
+import { Send, ArrowLeft, Loader2, Paperclip } from 'lucide-react'
+import FileUpload from '../components/common/FileUpload'
 
 const projectTypes = [
   'Landing Page', 'Campaña de Ads', 'Rediseño de Marca',
@@ -21,9 +22,10 @@ export default function NewRequest() {
     clientName: '',
     budget: '',
     deadline: '',
-      refs: '',
+    refs: '',
   })
   const [submitting, setSubmitting] = useState(false)
+  const [uploadedFiles, setUploadedFiles] = useState([])
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -153,6 +155,17 @@ export default function NewRequest() {
               rows={3}
               className="input-field resize-none"
               placeholder="Links de inspiración, referencias de marca, etc."
+            />
+          </div>
+
+          <div className="col-span-2">
+            <label className="block text-sm font-medium mb-1 flex items-center gap-1">
+              <Paperclip className="w-4 h-4" /> Archivos adjuntos
+            </label>
+            <FileUpload
+              onUpload={(file) => setUploadedFiles(prev => [...prev, file])}
+              path={`requests/${Date.now()}`}
+              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.svg,.mp4,.mov"
             />
           </div>
         </div>
