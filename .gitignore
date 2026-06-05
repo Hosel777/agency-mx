@@ -79,3 +79,6 @@ vite.config.ts.timestamp-*
 .npm
 .node_repl_history
 .yarn-integrity
+
+.vercel
+.env*.local
