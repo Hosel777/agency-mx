@@ -1,7 +1,7 @@
 # CONTEXTO DEL PROYECTO — Agency MX
 
 > Guardar este archivo cada vez que se avance para no perder el hilo si se cuelga o apaga la PC.
-> Última actualización: 5 Junio 2026 — Sesión 3: Agents real, Storage, FileUpload, deploy docs
+> Última actualización: 5 Junio 2026 — Sesión 4: AgentWorkspace tipo VSCode + logs en vivo
 
 ---
 
@@ -76,8 +76,15 @@ agency-mx/
 ### Frontend (UI completa)
 - Layout con Sidebar + Header + contenido principal
 - 7 páginas con navegación via React Router (+ Login)
-- Formulario de nueva solicitud funcional → inserta en Supabase + dispara orquestación + subida de archivos
-- Página de detalle con tabs (Resumen, Agentes, Conversación) + preview entregables
+- **AgentWorkspace**: workspace 3 paneles tipo VSCode:
+  - Explorador de archivos (entregables por agente con íconos)
+  - Editor con vista previa (texto, HTML/iframe, imagen, código)
+  - Chat lateral con agentes
+  - Terminal con logs en vivo (timestamps, colores, auto-scroll)
+  - Botón "Ejecutar Agentes" que dispara la orquestación
+  - Polling automático cada 3s para ver entregables y logs en tiempo real
+- Formulario de nueva solicitud → inserta en Supabase + dispara orquestación + subida de archivos
+- Página de detalle con workspace integrado, sin tabs
 - Página de aprobaciones con botones Aprobar / Solicitar Cambios / Entregar al Cliente
 - Modal de vista previa de entregables (text, html, image, code, file)
 - Chat real con agentes via Claude Sonnet con historial de conversación
@@ -90,13 +97,13 @@ agency-mx/
 - storage.js: servicio de subida, borrado y listado de archivos
 
 ### Backend / Base de datos
-- 4 tablas en Supabase: client_requests, agent_messages, deliverables, agents (41 agentes seed)
-- Columnas adicionales: deliverable_type, language, client_delivered, client_delivered_at
-- **api/orchestrate.js**: endpoint que recibe requestId, llama a Claude Sonnet, ejecuta cadena de agentes, genera entregables y los guarda en Supabase
-- **api/chat.js**: endpoint de chat con agentes via Claude, con historial de 20 mensajes
-- **api/lib/anthropic.js**: helper para llamar Claude Sonnet (modelo claude-sonnet-4-20250514)
-- **api/lib/agents.js**: 11 agentes con system prompts en español + 7 cadenas de orquestación
-- SQL Storage: instrucciones para crear bucket agency-files con políticas RLS
+- 5 tablas en Supabase (+ orchestration_logs embebido en client_requests)
+- Columnas: deliverable_type, language, client_delivered, client_delivered_at, orchestration_logs
+- **api/orchestrate.js**: escribe logs en `orchestration_logs` en cada paso
+- **api/chat.js**: chat con agentes via Claude, historial de 20 mensajes
+- **api/lib/anthropic.js**: helper Claude Sonnet
+- **api/lib/agents.js**: 11 prompts + 7 cadenas de orquestación
+- SQL Storage: instrucciones para bucket agency-files
 
 ### Definiciones de agentes
 - 112 archivos .md completos en `agents/` organizados en 10 departamentos
@@ -262,10 +269,12 @@ ANTHROPIC_API_KEY=           <-- obtener de https://console.anthropic.com
 - Login.jsx, Dashboard real, Chat real, Settings persistente, Logout
 - Bugfix: supabase import en RequestDetail
 
-### Sesión 3 — Agents, Storage, Deploy docs (Commit: 3a41643)
-- Agents page conectada a Supabase (con fallback local)
-- SQL seed sincronizado: 31 → 41 agentes
-- Supabase Storage: FileUpload component + storage.js service
-- DeliverablePreview usa deliverable_type de la BD
-- Guía de deploy completa
-- Proyecto ~90% listo para producción
+### Sesión 4 — AgentWorkspace + logs en vivo (Commit: 8a4529b)
+- AgentWorkspace: layout 3 paneles tipo VSCode (explorador | editor | chat)
+- FileExplorer: árbol de entregables por agente con íconos y estados
+- EditorPanel: vista previa de texto, HTML (iframe), imagen, código con pestañas
+- LiveTerminal: logs en vivo con timestamps, colores por nivel, auto-scroll
+- orchestrate.js: escribe logs en `orchestration_logs` (JSONB) durante la ejecución
+- Frontend: polling cada 3s de logs + entregables mientras orquesta
+- RequestDetail simplificado: solo breadcrumb + AgentWorkspace
+- SQL: columna `orchestration_logs JSONB` en client_requests
