@@ -1,7 +1,7 @@
 # CONTEXTO DEL PROYECTO — Agency MX
 
 > Guardar este archivo cada vez que se avance para no perder el hilo si se cuelga o apaga la PC.
-> Última actualización: 5 Junio 2026 — Sesión 2: Backend real con Claude Sonnet
+> Última actualización: 5 Junio 2026 — Sesión 3: Agents real, Storage, FileUpload, deploy docs
 
 ---
 
@@ -76,24 +76,27 @@ agency-mx/
 ### Frontend (UI completa)
 - Layout con Sidebar + Header + contenido principal
 - 7 páginas con navegación via React Router (+ Login)
-- Formulario de nueva solicitud funcional → inserta en Supabase + dispara orquestación
+- Formulario de nueva solicitud funcional → inserta en Supabase + dispara orquestación + subida de archivos
 - Página de detalle con tabs (Resumen, Agentes, Conversación) + preview entregables
 - Página de aprobaciones con botones Aprobar / Solicitar Cambios / Entregar al Cliente
 - Modal de vista previa de entregables (text, html, image, code, file)
 - Chat real con agentes via Claude Sonnet con historial de conversación
-- Página de agentes con acordeones expandibles
+- Página de agentes con datos desde Supabase (con fallback a agents.js)
 - Página de configuración guarda API Key en localStorage
 - Login/Register con Supabase Auth
 - Dashboard con stats reales y solicitudes desde Supabase
 - Logout funcional
+- FileUpload componente para subir archivos a Supabase Storage
+- storage.js: servicio de subida, borrado y listado de archivos
 
 ### Backend / Base de datos
-- 4 tablas en Supabase: client_requests, agent_messages, deliverables, agents
+- 4 tablas en Supabase: client_requests, agent_messages, deliverables, agents (41 agentes seed)
 - Columnas adicionales: deliverable_type, language, client_delivered, client_delivered_at
 - **api/orchestrate.js**: endpoint que recibe requestId, llama a Claude Sonnet, ejecuta cadena de agentes, genera entregables y los guarda en Supabase
 - **api/chat.js**: endpoint de chat con agentes via Claude, con historial de 20 mensajes
 - **api/lib/anthropic.js**: helper para llamar Claude Sonnet (modelo claude-sonnet-4-20250514)
 - **api/lib/agents.js**: 11 agentes con system prompts en español + 7 cadenas de orquestación
+- SQL Storage: instrucciones para crear bucket agency-files con políticas RLS
 
 ### Definiciones de agentes
 - 112 archivos .md completos en `agents/` organizados en 10 departamentos
@@ -103,15 +106,11 @@ agency-mx/
 
 ## LO QUE NO FUNCIONA / ESTÁ INCOMPLETO
 
-### Hardcodeado
-- Agents page: usa `agents.js` hardcodeado en vez de consultar tabla `agents` de Supabase
-- 112 .md vs 41 en JS vs 31 en SQL — inconsistentes (hay que unificar)
-
-### Falta
-- Subida de archivos con Supabase Storage
+### Por mejorar
+- 112 .md vs 41 en JS vs 41 en SQL — los .md tienen agentes especializados extra
 - Notificaciones en tiempo real (Supabase Realtime)
 - Pruebas automatizadas
-- Límite de timeout de Vercel (Hobby=10s puede ser poco para cadenas largas)
+- Timeout de Vercel Hobby (10s puede ser poco para cadenas largas de agentes)
 
 ---
 
@@ -119,15 +118,110 @@ agency-mx/
 
 | Área | % |
 |---|---|
-| UI / Frontend visual | **90%** |
-| CRUD contra Supabase | **90%** |
-| Autenticación | **80%** |
-| Integración con IA (Claude) | **100%** (backend listo, falta API key del usuario) |
-| Orquestación de agentes | **100%** (backend listo) |
-| Chat con agentes | **100%** (backend listo) |
+| UI / Frontend visual | **95%** |
+| CRUD contra Supabase | **95%** |
+| Autenticación (Login/Register/Logout) | **100%** |
+| Integración con IA (Claude Sonnet) | **100%** (backend listo, falta API key) |
+| Orquestación de agentes | **100%** |
+| Chat con agentes | **100%** |
+| Agents page desde Supabase | **100%** |
+| Supabase Storage (subida archivos) | **100%** |
 | Definiciones de agentes (.md) | **100%** |
-| Consistencia agentes (.md vs JS vs SQL) | **30%** |
-| **GLOBAL** | **~80%**
+| Consistencia agentes (.md vs JS vs SQL) | **50%** (41 sincronizados, .md tiene más) |
+| **GLOBAL** | **~90%** |
+
+## PENDIENTE
+
+- Revisar timeout Vercel Hobby (10s puede ser poco para cadenas largas de agentes)
+- Unificar 112 .md con los 41 core agents
+- Pruebas automatizadas
+
+---
+
+## GUÍA DE DEPLOY — LLEVAR A PRODUCCIÓN
+
+### 1. Configurar Supabase
+
+1. Ir a https://supabase.com y abrir el proyecto (bphfylpvuoijadkgyifk)
+2. **SQL Editor** → pegar todo `supabase-schema.sql` y ejecutar
+3. **Project Settings > API** → copiar `Service Role Key` (no la anon key)
+4. **Storage** → crear bucket `agency-files`:
+   ```sql
+   INSERT INTO storage.buckets (id, name, public) VALUES ('agency-files', 'agency-files', false);
+   ```
+   Luego crear políticas:
+   ```sql
+   CREATE POLICY "users_upload_own_files" ON storage.objects
+     FOR INSERT WITH CHECK (auth.role() = 'authenticated' AND bucket_id = 'agency-files');
+   CREATE POLICY "users_read_files" ON storage.objects
+     FOR SELECT USING (auth.role() = 'authenticated' AND bucket_id = 'agency-files');
+   ```
+
+### 2. Obtener API Key de Anthropic
+
+1. Ir a https://console.anthropic.com
+2. Crear cuenta o iniciar sesión
+3. Ir a API Keys → crear key
+4. Copiar la key (empieza con `sk-ant-`)
+
+### 3. Deploy en Vercel
+
+1. Ir a https://vercel.com
+2. Importar repositorio: `https://github.com/Hosel777/agency-mx`
+3. Framework: **Vite**
+4. Build command: `npm run build`
+5. Output directory: `dist`
+
+6. **Environment Variables** (sección en Vercel):
+   | Variable | Valor |
+   |---|---|
+   | `VITE_SUPABASE_URL` | `https://bphfylpvuoijadkgyifk.supabase.co` |
+   | `VITE_SUPABASE_ANON_KEY` | (la anon key de Supabase) |
+   | `SUPABASE_URL` | `https://bphfylpvuoijadkgyifk.supabase.co` |
+   | `SUPABASE_SERVICE_ROLE_KEY` | (service role key de Supabase) |
+   | `ANTHROPIC_API_KEY` | (tu key de Anthropic) |
+
+7. Deploy → Vercel genera URL tipo `agency-mx.vercel.app`
+
+### 4. Probar en producción
+
+1. Abrir la URL de Vercel
+2. Registrarse con email y contraseña
+3. Ir a Configuración → verificar que la API Key esté cargada
+4. Crear una solicitud de prueba (ej: "Landing page para negocio local")
+5. Ir al detalle de la solicitud → ver cómo los agentes generan entregables
+6. Revisar Aprobaciones → aprobar y entregar al cliente
+
+### 5. Desarrollo local
+
+```bash
+npm run dev        # Iniciar frontend en :5173
+npm run build      # Build producción
+```
+
+Las API routes (`/api/*`) solo funcionan en Vercel. Para desarrollo local, necesitas Vercel CLI:
+```bash
+npm i -g vercel
+vercel dev         # Inicia todo localmente (frontend + api)
+```
+
+---
+
+## PRÓXIMA SESIÓN — CONTINUAR DESDE AQUÍ
+
+Lo último completado:
+- ✅ Agents page conectada a Supabase con fallback local
+- ✅ SQL seed actualizado a 41 agentes
+- ✅ Supabase Storage + FileUpload component
+- ✅ DeliverablePreview usa deliverable_type de la BD
+- ✅ Guía de deploy completa en este documento
+- ❌ El proyecto está ~90% listo para producción
+
+Pasos para la próxima sesión:
+1. Hacer deploy a Vercel siguiendo la guía
+2. Probar que la orquestación funcione
+3. Unificar 112 .md con agentes core (opcional)
+4. Agregar pruebas automatizadas (opcional)
 
 ---
 
@@ -145,54 +239,33 @@ git add -A && git commit -m "mensaje" && git push  # Subir cambios
 ## VARIABLES DE ENTORNO (.env)
 
 ```
-VITE_SUPABASE_URL=https://jqhjhuwlshqhgxbpmtum.supabase.co
+VITE_SUPABASE_URL=https://bphfylpvuoijadkgyifk.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_URL=https://bphfylpvuoijadkgyifk.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=  <-- obtener de Supabase > Project Settings > API
+ANTHROPIC_API_KEY=           <-- obtener de https://console.anthropic.com
 ```
-
-API Key de IA se configura en Settings (pero no se guarda aún).
 
 ---
 
-## ÚLTIMA ACTUALIZACIÓN — Backend real con Claude Sonnet
+## HISTORIAL DE SESIONES
 
-✅ API backend completa (Vercel Serverless Functions):
-  - api/orchestrate.js — orquestación: recibe requestId, llama a Claude, activa agentes en cadena
-  - api/chat.js — chat en tiempo real con agentes via Claude
-  - api/lib/agents.js — 11 agentes con prompts en español + 7 cadenas de orquestación
-  - api/lib/anthropic.js — helper para llamar Claude Sonnet
-  - api/lib/supabase.js — cliente admin para operaciones de backend
+### Sesión 1 — Fundación
+- Proyecto inicializado (Vite + React + Tailwind)
+- Layout, 6 páginas, Supabase schema, git repo
+- 112 agentes .md, DeliverablePreview, Approvals, SQL migraciones
 
-✅ Frontend actualizado:
-  - NewRequest.jsx — crea solicitud + dispara orquestación automáticamente
-  - AgentChat.jsx — chat real contra Claude con historial de conversación
-  - Dashboard.jsx — consulta datos reales de Supabase (stats y solicitudes)
-  - Header.jsx — logout funcional + link a login
-  - Settings.jsx — guarda API key en localStorage y la envía al backend
-  - Login.jsx — login/register con Supabase Auth
-  - RequestDetail.jsx — bugfix (supabase no importado)
-  - api.js — nuevas funciones startOrchestration() y sendChatMessage()
+### Sesión 2 — Backend real con Claude Sonnet (Commit: fda8308)
+- api/orchestrate.js — orquestación con Claude Sonnet
+- api/chat.js — chat en tiempo real con agentes
+- api/lib/agents.js — 11 prompts + 7 cadenas de orquestación
+- Login.jsx, Dashboard real, Chat real, Settings persistente, Logout
+- Bugfix: supabase import en RequestDetail
 
-## PENDIENTE PARA PRÓXIMA SESIÓN
-
-### Fase 1 — Configuración para que funcione en producción
-1. ⬜ El usuario debe obtener:
-   - ANTHROPIC_API_KEY de https://console.anthropic.com
-   - SUPABASE_SERVICE_ROLE_KEY de Supabase > Project Settings > API
-2. ⬜ Agregar ANTHROPIC_API_KEY y SUPABASE_SERVICE_ROLE_KEY como variables de entorno en Vercel
-3. ⬜ Ejecutar migraciones SQL pendientes en Supabase SQL Editor
-4. ⬜ El .env ya tiene las variables pero con valores vacíos (el usuario llena)
-
-### Fase 2 — Mejoras pendientes
-5. ⬜ Página de Agents.js: conectar a tabla `agents` de Supabase en vez de datos hardcodeados
-6. ⬜ Revisar límite de timeout de Vercel (Hobby=10s, Pro=60s)
-7. ⬜ Unificar 112 .md ↔ 41 JS ↔ 31 SQL (sincronizar agentes)
-8. ⬜ Subida de archivos con Supabase Storage
-9. ⬜ Pruebas automatizadas
-
-## PRÓXIMA SESIÓN — CONTINUAR DESDE AQUÍ
-
-Pasos para arrancar:
-1. `npm run dev` para iniciar frontend
-2. Llenar ANTHROPIC_API_KEY en .env o via Settings
-3. Llenar SUPABASE_SERVICE_ROLE_KEY en .env
-4. Probar creando una solicitud y viendo cómo los agentes generan entregables
+### Sesión 3 — Agents, Storage, Deploy docs (Commit: 3a41643)
+- Agents page conectada a Supabase (con fallback local)
+- SQL seed sincronizado: 31 → 41 agentes
+- Supabase Storage: FileUpload component + storage.js service
+- DeliverablePreview usa deliverable_type de la BD
+- Guía de deploy completa
+- Proyecto ~90% listo para producción
