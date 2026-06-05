@@ -2,6 +2,14 @@ import { supabase } from './lib/supabase.js'
 import { callClaude } from './lib/anthropic.js'
 import { CHAINS, AGENT_PROMPTS } from './lib/agents.js'
 
+async function addLog(requestId, agent, text, level = 'info') {
+  const log = { time: new Date().toISOString(), agent, text, level }
+  const { data } = await supabase.from('client_requests').select('orchestration_logs').eq('id', requestId).single()
+  const logs = data?.orchestration_logs || []
+  logs.push(log)
+  await supabase.from('client_requests').update({ orchestration_logs: logs }).eq('id', requestId)
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -28,12 +36,16 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Request not found' })
     }
 
+    await addLog(requestId, 'Sistema', 'Iniciando orquestación...')
+    await addLog(requestId, 'Sistema', `Tipo de proyecto: ${request.project_type}`)
+
     await supabase
       .from('client_requests')
       .update({ status: 'in_progress' })
       .eq('id', requestId)
 
     // --- Step 1: Orchestrator ---
+    await addLog(requestId, 'Agents Orchestrator', 'Analizando solicitud y generando plan de ejecución...')
     const orchestratorPrompt = AGENT_PROMPTS['agents-orchestrator']
     const orchestratorMsg = `Analiza la siguiente solicitud de marketing:
 
@@ -52,7 +64,8 @@ Genera el plan de ejecución en formato JSON. Recuerda que debes definir qué ca
       apiKey
     )
 
-    // Save orchestrator message
+    await addLog(requestId, 'Agents Orchestrator', 'Plan de ejecución generado')
+
     await supabase.from('agent_messages').insert({
       request_id: requestId,
       agent_name: 'Agents Orchestrator',
@@ -61,7 +74,7 @@ Genera el plan de ejecución en formato JSON. Recuerda que debes definir qué ca
       content: orchestratorResponse
     })
 
-    // Parse orchestrator response (extract JSON)
+    // Parse orchestrator response
     let plan
     try {
       const jsonMatch = orchestratorResponse.match(/\{[\s\S]*\}/)
@@ -70,50 +83,43 @@ Genera el plan de ejecución en formato JSON. Recuerda que debes definir qué ca
       plan = null
     }
 
-    // Determine chain from orchestrator or fallback to project_type
     const chainId = plan?.chain || request.project_type || 'full'
     const chain = CHAINS[chainId] || CHAINS.full
     const agentSequence = chain.agents
 
-    // If orchestrator specified custom agent instructions, use them
+    await addLog(requestId, 'Agents Orchestrator', `Cadena seleccionada: ${chain.label} (${agentSequence.length} agentes)`)
+
     const agentInstructions = {}
     if (plan?.agentes) {
-      plan.agentes.forEach(a => {
-        agentInstructions[a.id] = a.instrucciones
-      })
+      plan.agentes.forEach(a => { agentInstructions[a.id] = a.instrucciones })
     }
 
-    // --- Step 2: Execute each agent in sequence ---
+    // --- Step 2: Execute each agent ---
     const completedDeliverables = []
     let previousContext = `Solicitud original:\nTítulo: ${request.title}\nDescripción: ${request.description}\n\n`
 
-    for (const agentId of agentSequence) {
+    for (let i = 0; i < agentSequence.length; i++) {
+      const agentId = agentSequence[i]
       const agentConfig = AGENT_PROMPTS[agentId]
       if (!agentConfig) continue
 
-      // Update status
-      await supabase
-        .from('client_requests')
-        .update({ status: `Procesando: ${agentConfig.name}` })
-        .eq('id', requestId)
+      await addLog(requestId, agentConfig.name, `Trabajando... (${i + 1}/${agentSequence.length})`)
+      await addLog(requestId, 'Sistema', `Procesando: ${agentConfig.name}`)
 
-      // Build the message with context from previous agents
       let agentMessage = previousContext
-
       if (agentInstructions[agentId]) {
         agentMessage += `Instrucciones específicas: ${agentInstructions[agentId]}\n\n`
       }
-
       agentMessage += `Basándote en la información anterior y el contexto del proyecto, genera tu entregable como ${agentConfig.name}.`
 
-      // Call Claude
       const agentResponse = await callClaude(
         agentConfig.systemPrompt,
         [{ role: 'user', content: agentMessage }],
         apiKey
       )
 
-      // Save agent message
+      await addLog(requestId, agentConfig.name, 'Entregable generado')
+
       await supabase.from('agent_messages').insert({
         request_id: requestId,
         agent_name: agentConfig.name,
@@ -122,7 +128,6 @@ Genera el plan de ejecución en formato JSON. Recuerda que debes definir qué ca
         content: agentResponse
       })
 
-      // Save as deliverable
       const deliverableName = `${agentConfig.emoji} ${agentConfig.name}: ${request.title}`
       const { data: deliverable } = await supabase.from('deliverables').insert({
         request_id: requestId,
@@ -139,13 +144,12 @@ Genera el plan de ejecución en formato JSON. Recuerda que debes definir qué ca
         completedDeliverables.push(deliverable)
       }
 
-      // Append to context for next agent
       previousContext += `\n\n--- ${agentConfig.name} ---\n${agentResponse.substring(0, 3000)}`
     }
 
-    // --- Step 3: Mark request as completed ---
-    const allAgentsCount = agentSequence.length
-    const completedCount = completedDeliverables.length
+    // --- Step 3: Complete ---
+    await addLog(requestId, 'Sistema', `Orquestación completada: ${completedDeliverables.length} entregables generados por ${agentSequence.length} agentes`)
+    await addLog(requestId, 'Sistema', 'Los entregables están listos para revisión en Aprobaciones')
 
     await supabase
       .from('client_requests')
@@ -155,13 +159,15 @@ Genera el plan de ejecución en formato JSON. Recuerda que debes definir qué ca
     return res.status(200).json({
       success: true,
       requestId,
-      agentsActivated: allAgentsCount,
-      deliverablesGenerated: completedCount,
+      agentsActivated: agentSequence.length,
+      deliverablesGenerated: completedDeliverables.length,
       plan: plan || { chain: chainId, agents: agentSequence }
     })
 
   } catch (error) {
     console.error('Orchestration error:', error)
+
+    await addLog(requestId, 'Sistema', `Error: ${error.message}`, 'error')
 
     await supabase
       .from('client_requests')
