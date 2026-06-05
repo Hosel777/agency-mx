@@ -144,7 +144,6 @@ export default function NewRequest() {
               name="refs"
               value={form.refs}
               onChange={handleChange}
-              onChange={handleChange}
               rows={3}
               className="input-field resize-none"
               placeholder="Links de inspiración, referencias de marca, etc."

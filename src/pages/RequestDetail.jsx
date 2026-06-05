@@ -1,36 +1,72 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft, Bot, FileText, CheckCircle2, XCircle,
-  MessageSquare, Download, Send
+  MessageSquare, Eye, Loader2
 } from 'lucide-react'
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/constants'
+import { fetchRequest, fetchDeliverables, fetchAgentMessages, updateRequestStatus } from '../services/api'
 import AgentChat from '../components/agents/AgentChat'
-
-const mockRequest = {
-  id: '1',
-  title: 'Landing page SaaS reservas',
-  client: 'Cliente A',
-  type: 'Landing Page',
-  status: 'in_progress',
-  description: 'Necesitamos una landing page moderna para un SaaS de reservas de restaurantes. Debe incluir hero, features, testimoniales, pricing y CTA.',
-  budget: 5000,
-  deadline: '2026-07-01',
-  created_at: '2026-06-01',
-}
-
-const mockDeliverables = [
-  { id: 'd1', agent: 'Trend Researcher', name: 'Research de mercado', status: 'completed' },
-  { id: 'd2', agent: 'Brand Guardian', name: 'Brief de marca', status: 'completed' },
-  { id: 'd3', agent: 'UI Designer', name: 'Diseño Figma', status: 'in_progress' },
-  { id: 'd4', agent: 'Content Creator', name: 'Copy para landing', status: 'pending' },
-  { id: 'd5', agent: 'Frontend Developer', name: 'Maquetación código', status: 'pending' },
-]
+import DeliverablePreview from '../components/common/DeliverablePreview'
 
 export default function RequestDetail() {
   const { id } = useParams()
+  const [req, setReq] = useState(null)
+  const [deliverables, setDeliverables] = useState([])
+  const [messages, setMessages] = useState([])
   const [activeTab, setActiveTab] = useState('overview')
-  const req = mockRequest
+  const [loading, setLoading] = useState(true)
+  const [preview, setPreview] = useState(null)
+  const [delivering, setDelivering] = useState(false)
+
+  useEffect(() => {
+    if (!id) return
+    Promise.all([
+      fetchRequest(id),
+      fetchDeliverables(id),
+      fetchAgentMessages(id),
+    ]).then(([reqRes, delRes, msgRes]) => {
+      if (reqRes.data) setReq(reqRes.data)
+      if (delRes.data) setDeliverables(delRes.data)
+      if (msgRes.data) setMessages(msgRes.data)
+      setLoading(false)
+    })
+  }, [id])
+
+  const handleDeliver = async (deliverableId) => {
+    setDelivering(true)
+    const { error } = await supabase
+      .from('deliverables')
+      .update({ client_delivered: true, client_delivered_at: new Date().toISOString() })
+      .eq('id', deliverableId)
+    if (!error) {
+      setDeliverables(prev => prev.map(d =>
+        d.id === deliverableId ? { ...d, client_delivered: true, client_delivered_at: new Date().toISOString() } : d
+      ))
+      setPreview(null)
+    }
+    setDelivering(false)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 text-agency-600 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!req) {
+    return (
+      <div className="text-center py-12 text-gray-400">
+        Solicitud no encontrada
+      </div>
+    )
+  }
+
+  const progress = deliverables.length > 0
+    ? Math.round((deliverables.filter(d => d.status === 'completed' || d.status === 'approved').length / deliverables.length) * 100)
+    : 0
 
   return (
     <div className="space-y-6">
@@ -42,7 +78,7 @@ export default function RequestDetail() {
           <div>
             <h1 className="text-2xl font-bold">{req.title}</h1>
             <p className="text-gray-500 text-sm">
-              {req.client} — {req.type} — Creado {req.created_at}
+              {req.client_name || 'Cliente'} — {req.project_type} — Creado {new Date(req.created_at).toLocaleDateString()}
             </p>
           </div>
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[req.status]}`}>
@@ -82,50 +118,68 @@ export default function RequestDetail() {
           <div className="grid grid-cols-3 gap-4">
             <div className="p-3 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-500">Presupuesto</p>
-              <p className="font-semibold">${req.budget?.toLocaleString()}</p>
+              <p className="font-semibold">{req.budget ? `$${Number(req.budget).toLocaleString()}` : 'No definido'}</p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-500">Fecha límite</p>
-              <p className="font-semibold">{req.deadline}</p>
+              <p className="font-semibold">{req.deadline ? new Date(req.deadline).toLocaleDateString() : 'No definida'}</p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-500">Progreso</p>
-              <p className="font-semibold">40%</p>
+              <p className="font-semibold">{progress}%</p>
             </div>
           </div>
 
           <div>
             <h3 className="font-semibold mb-3">Entregables</h3>
-            <div className="space-y-2">
-              {mockDeliverables.map(d => (
-                <div key={d.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    {d.status === 'completed' ? (
-                      <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    ) : d.status === 'in_progress' ? (
-                      <Bot className="w-5 h-5 text-blue-500 animate-pulse" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-gray-300" />
-                    )}
-                    <div>
-                      <p className="text-sm font-medium">{d.name}</p>
-                      <p className="text-xs text-gray-500">{d.agent}</p>
+            {deliverables.length === 0 ? (
+              <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-lg">
+                <Bot className="w-8 h-8 mx-auto mb-2" />
+                <p className="text-sm">Los agentes aún no han generado entregables</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {deliverables.map(d => (
+                  <div key={d.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-3">
+                      {d.status === 'completed' || d.status === 'approved' ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      ) : d.status === 'in_progress' ? (
+                        <Bot className="w-5 h-5 text-blue-500 animate-pulse" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-gray-300" />
+                      )}
+                      <div>
+                        <p className="text-sm font-medium">{d.name}</p>
+                        <p className="text-xs text-gray-500">{d.agent_name} {d.client_delivered && '— ✅ Entregado al cliente'}</p>
+                      </div>
                     </div>
+                    {(d.status === 'completed' || d.status === 'approved') && (
+                      <button
+                        onClick={() => setPreview(d)}
+                        className="text-agency-600 hover:text-agency-800 text-sm flex items-center gap-1"
+                      >
+                        <Eye className="w-4 h-4" /> Vista Previa
+                      </button>
+                    )}
                   </div>
-                  {d.status === 'completed' && (
-                    <button className="text-agency-600 hover:text-agency-800 text-sm flex items-center gap-1">
-                      <Download className="w-4 h-4" /> Ver
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {activeTab === 'agents' && <AgentChat requestId={id} />}
-      {activeTab === 'chat' && <AgentChat requestId={id} />}
+      {activeTab === 'agents' && <AgentChat requestId={id} messages={messages} />}
+      {activeTab === 'chat' && <AgentChat requestId={id} messages={messages} />}
+
+      {preview && (
+        <DeliverablePreview
+          deliverable={preview}
+          onClose={() => setPreview(null)}
+          onDeliver={handleDeliver}
+        />
+      )}
     </div>
   )
 }

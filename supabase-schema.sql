@@ -43,10 +43,20 @@ CREATE TABLE IF NOT EXISTS public.deliverables (
     description TEXT,
     content TEXT,
     file_url TEXT,
+    deliverable_type TEXT DEFAULT 'text' CHECK (deliverable_type IN ('text', 'html', 'image', 'code', 'file')),
+    language TEXT,
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'approved', 'rejected')),
+    client_delivered BOOLEAN DEFAULT false,
+    client_delivered_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migración para tablas existentes
+ALTER TABLE public.deliverables ADD COLUMN IF NOT EXISTS deliverable_type TEXT DEFAULT 'text';
+ALTER TABLE public.deliverables ADD COLUMN IF NOT EXISTS language TEXT;
+ALTER TABLE public.deliverables ADD COLUMN IF NOT EXISTS client_delivered BOOLEAN DEFAULT false;
+ALTER TABLE public.deliverables ADD COLUMN IF NOT EXISTS client_delivered_at TIMESTAMPTZ;
 
 -- Tabla de agentes
 CREATE TABLE IF NOT EXISTS public.agents (

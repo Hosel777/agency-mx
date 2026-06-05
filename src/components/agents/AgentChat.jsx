@@ -1,28 +1,18 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Bot, User, Send, Loader2 } from 'lucide-react'
 
-const mockMessages = [
-  { id: 'm1', agent: 'Agents Orchestrator', role: 'assistant', content: 'Analizando la solicitud... Detecto que necesitamos: Research de mercado, Brief de marca, Diseño UI, Copy, Frontend y SEO. Activando Trend Researcher.', time: 'Hace 2h' },
-  { id: 'm2', agent: 'Trend Researcher', role: 'assistant', content: 'Investigación completada. Analicé 15 competidores directos. Los principales insights: (1) El 80% usa hero con video, (2) Predominan colores azules, (3) El precio promedio es $29/mes.', time: 'Hace 1h' },
-  { id: 'm3', agent: 'Brand Guardian', role: 'assistant', content: 'Brief de marca completado. Propongo: paleta basada en naranja + azul profundo, tono profesional pero cercano, tipografía Inter para web.', time: 'Hace 30m' },
-  { id: 'm4', agent: 'UI Designer', role: 'assistant', content: 'Diseño en progreso. Voy a maquetar la sección hero con la propuesta de Brand Guardian.', time: 'Hace 5m' },
-]
-
-const allAgents = [
-  'Agents Orchestrator', 'Trend Researcher', 'Product Manager', 'Strategy',
-  'Brand Guardian', 'UI Designer', 'UX Researcher', 'Content Creator',
-  'Social Media Strategist', 'SEO Specialist', 'Frontend Developer',
-  'Backend Architect', 'PPC Campaign Strategist', 'Reality Checker',
-]
-
-export default function AgentChat({ requestId }) {
-  const [messages] = useState(mockMessages)
+export default function AgentChat({ requestId, messages = [] }) {
   const [input, setInput] = useState('')
   const [selectedAgent, setSelectedAgent] = useState('all')
 
+  const allAgents = useMemo(() => {
+    const set = new Set(messages.map(m => m.agent_name))
+    return ['Agents Orchestrator', ...set]
+  }, [messages])
+
   const filteredMessages = selectedAgent === 'all'
     ? messages
-    : messages.filter(m => m.agent === selectedAgent)
+    : messages.filter(m => (m.agent_name || m.agent) === selectedAgent)
 
   const handleSend = () => {
     if (!input.trim()) return
