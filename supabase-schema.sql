@@ -13,9 +13,13 @@ CREATE TABLE IF NOT EXISTS public.client_requests (
     budget NUMERIC,
     deadline DATE,
     refs TEXT DEFAULT '',
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'review', 'approved', 'completed', 'rejected')),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migración segura si la tabla ya existe sin status
+ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
 
 -- Tabla de mensajes de agentes
 CREATE TABLE IF NOT EXISTS public.agent_messages (
