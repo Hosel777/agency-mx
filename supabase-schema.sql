@@ -12,8 +12,7 @@ CREATE TABLE IF NOT EXISTS public.client_requests (
     client_name TEXT,
     budget NUMERIC,
     deadline DATE,
-    references TEXT,
-    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'review', 'approved', 'completed', 'rejected')),
+    refs TEXT DEFAULT '',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

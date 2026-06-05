@@ -20,7 +20,7 @@ export default function NewRequest() {
     clientName: '',
     budget: '',
     deadline: '',
-    references: '',
+      refs: '',
   })
   const [submitting, setSubmitting] = useState(false)
 
@@ -43,7 +43,7 @@ export default function NewRequest() {
       client_name: form.clientName,
       budget: form.budget ? Number(form.budget) : null,
       deadline: form.deadline || null,
-      references: form.references,
+      refs: form.refs,
       status: 'pending',
     })
 
@@ -141,8 +141,9 @@ export default function NewRequest() {
           <div className="col-span-2">
             <label className="block text-sm font-medium mb-1">Referencias / URLs</label>
             <textarea
-              name="references"
-              value={form.references}
+              name="refs"
+              value={form.refs}
+              onChange={handleChange}
               onChange={handleChange}
               rows={3}
               className="input-field resize-none"
