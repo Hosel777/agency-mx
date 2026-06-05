@@ -147,5 +147,19 @@ INSERT INTO public.agents (id, name, role, department, level) VALUES
     ('legal-compliance', 'Legal Compliance', 'Regulaciones', 'Finanzas & Legal', 9),
     ('analytics-reporter', 'Analytics Reporter', 'Dashboards y KPIs', 'Finanzas & Legal', 9),
     ('support-responder', 'Support Responder', 'Atención al cliente', 'Soporte & Operaciones', 10),
-    ('project-shepherd', 'Project Shepherd', 'Coordinación', 'Soporte & Operaciones', 10)
+    ('project-shepherd', 'Project Shepherd', 'Coordinación', 'Soporte & Operaciones', 10),
+    -- Agentes adicionales (sync con agents.js)
+    ('book-co-author', 'Book Co-Author', 'Contenido largo', 'Estrategia & Research', 2),
+    ('image-prompt-engineer', 'Image Prompt Engineer', 'Generación de imágenes', 'Producto & Diseño', 3),
+    ('instagram-curator', 'Instagram Curator', 'Estrategia visual IG', 'Marketing & Contenido', 4),
+    ('tiktok-strategist', 'TikTok Strategist', 'Contenido TikTok', 'Marketing & Contenido', 4),
+    ('linkedin-content-creator', 'LinkedIn Content Creator', 'Contenido B2B', 'Marketing & Contenido', 4),
+    ('tracking-specialist', 'Tracking Specialist', 'GTM, GA4, CAPI', 'Paid Media', 5),
+    ('security-architect', 'Security Architect', 'Seguridad', 'Ingeniería', 6),
+    ('accessibility-auditor', 'Accessibility Auditor', 'WCAG', 'Testing & QA', 7),
+    ('pipeline-analyst', 'Pipeline Analyst', 'Forecasting', 'Ventas & CRM', 8),
+    ('studio-producer', 'Studio Producer', 'Orquestación multi-proyecto', 'Soporte & Operaciones', 10)
 ON CONFLICT (id) DO NOTHING;
+
+-- Sincronizar agentes faltantes usando los archivos agents/ .md (opcional - para referencia)
+-- Total: 41 agentes en SQL (31 originales + 10 añadidos)

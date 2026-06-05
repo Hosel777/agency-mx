@@ -1,7 +1,7 @@
 # CONTEXTO DEL PROYECTO — Agency MX
 
 > Guardar este archivo cada vez que se avance para no perder el hilo si se cuelga o apaga la PC.
-> Última actualización: 5 Junio 2026
+> Última actualización: 5 Junio 2026 — Sesión 2: Backend real con Claude Sonnet
 
 ---
 
@@ -43,21 +43,29 @@ agency-mx/
 │   ├── contexts/AppContext.jsx     # Estado global (user, requests, agentsActive)
 │   ├── hooks/useSupabase.js       # Hook NO USADO en ningún componente
 │   ├── pages/
-│   │   ├── Dashboard.jsx          # Estadísticas hardcodeadas
-│   │   ├── NewRequest.jsx         # Formulario → inserta en Supabase ✅
-│   │   ├── RequestDetail.jsx      # Lee de Supabase ✅ (BUG: supabase no importado L38)
-│   │   ├── Agents.jsx             # Lista hardcodeada desde agents.js
+│   │   ├── Dashboard.jsx          # Consulta datos reales de Supabase ✅
+│   │   ├── NewRequest.jsx         # Formulario → inserta en Supabase + orquestación ✅
+│   │   ├── RequestDetail.jsx      # Lee de Supabase + preview entregables ✅
+│   │   ├── Agents.jsx             # Lista hardcodeada desde agents.js ⬜
 │   │   ├── Approvals.jsx          # CRUD real contra Supabase ✅
-│   │   └── Settings.jsx           # Solo UI, no guarda nada
+│   │   ├── Settings.jsx           # Guarda API key en localStorage ✅
+│   │   └── Login.jsx              # Login/Register con Supabase Auth ✅
 │   ├── services/
 │   │   ├── supabase.js            # Cliente Supabase configurado ✅
-│   │   └── api.js                 # 6 funciones CRUD ✅
+│   │   └── api.js                 # CRUD + startOrchestration + sendChatMessage ✅
 │   └── utils/
 │       ├── agents.js              # 41 agentes hardcodeados (vs 112 .md, vs 31 SQL)
 │       ├── constants.js           # Status labels/colors
-│       └── orchestrator-prompts.js # Prompt de orchestrator (NO USADO)
+│       └── orchestrator-prompts.js # Prompt de orchestrator (ahora en api/lib/agents.js)
+├── api/                           # Backend serverless (Vercel Functions)
+│   ├── orchestrate.js             # Orquestación con Claude ✅
+│   ├── chat.js                    # Chat con agentes ✅
+│   └── lib/
+│       ├── anthropic.js           # Helper Claude Sonnet ✅
+│       ├── agents.js              # Prompts + cadenas de agentes ✅
+│       └── supabase.js            # Cliente admin Supabase ✅
 ├── supabase-schema.sql            # Schema completo + seed + migraciones
-├── .env                           # Credenciales Supabase REALES del usuario
+├── .env                           # Credenciales REALES del usuario
 └── CONTEXTO.md                    # ← ESTE ARCHIVO
 ```
 
@@ -67,73 +75,59 @@ agency-mx/
 
 ### Frontend (UI completa)
 - Layout con Sidebar + Header + contenido principal
-- 6 páginas con navegación via React Router
-- Formulario de nueva solicitud funcional (inserta en Supabase)
-- Página de detalle con tabs (Resumen, Agentes, Conversación)
+- 7 páginas con navegación via React Router (+ Login)
+- Formulario de nueva solicitud funcional → inserta en Supabase + dispara orquestación
+- Página de detalle con tabs (Resumen, Agentes, Conversación) + preview entregables
 - Página de aprobaciones con botones Aprobar / Solicitar Cambios / Entregar al Cliente
 - Modal de vista previa de entregables (text, html, image, code, file)
-- Chat UI con filtro por agente
+- Chat real con agentes via Claude Sonnet con historial de conversación
 - Página de agentes con acordeones expandibles
-- Página de configuración (solo UI)
+- Página de configuración guarda API Key en localStorage
+- Login/Register con Supabase Auth
+- Dashboard con stats reales y solicitudes desde Supabase
+- Logout funcional
 
 ### Backend / Base de datos
 - 4 tablas en Supabase: client_requests, agent_messages, deliverables, agents
-- 6 funciones CRUD en api.js
-- 31 agentes seed insertados en SQL
 - Columnas adicionales: deliverable_type, language, client_delivered, client_delivered_at
+- **api/orchestrate.js**: endpoint que recibe requestId, llama a Claude Sonnet, ejecuta cadena de agentes, genera entregables y los guarda en Supabase
+- **api/chat.js**: endpoint de chat con agentes via Claude, con historial de 20 mensajes
+- **api/lib/anthropic.js**: helper para llamar Claude Sonnet (modelo claude-sonnet-4-20250514)
+- **api/lib/agents.js**: 11 agentes con system prompts en español + 7 cadenas de orquestación
 
 ### Definiciones de agentes
-- 112 archivos .md completos con frontmatter, identidad, misión, deliverables, workflow, métricas
-- Organizados en 10 departamentos + orchestrator + specialized
+- 112 archivos .md completos en `agents/` organizados en 10 departamentos
+- 11 prompts de agente en `api/lib/agents.js` para el backend
 
 ---
 
 ## LO QUE NO FUNCIONA / ESTÁ INCOMPLETO
 
-### Bugs
-- **RequestDetail.jsx línea 38**: usa `supabase.from(...)` pero `supabase` no está importado (solo está `fetchRequest` de `api.js`)
+### Hardcodeado
+- Agents page: usa `agents.js` hardcodeado en vez de consultar tabla `agents` de Supabase
+- 112 .md vs 41 en JS vs 31 en SQL — inconsistentes (hay que unificar)
 
-### Hardcodeado (hay que conectar a Supabase)
-- Dashboard: estadísticas son números fijos (3,2,1,5)
-- Agents page: usa `agents.js` hardcodeado en vez de consultar tabla `agents`
-- 112 .md vs 41 en JS vs 31 en SQL — inconsistentes
-
-### No existe
-- **No hay backend serverless** (api/ vacío)
-- **No hay integración con LLM** (OpenAI, Together, Anthropic, etc.)
-- **No hay orquestación de agentes** (orchestrator-prompts.js existe pero no se usa)
-- **No hay generación automática de entregables** al crear solicitud
-- **Chat no envía mensajes a ningún lado** — solo UI
-- **No hay Login / Register** (solo detección de sesión existente)
-- **Settings no guarda nada** (API Key, etc.)
-- **botón Logout en Header no funciona**
-- **No hay subida de archivos** (Supabase Storage sin usar)
-- **No hay pruebas/tests**
+### Falta
+- Subida de archivos con Supabase Storage
+- Notificaciones en tiempo real (Supabase Realtime)
+- Pruebas automatizadas
+- Límite de timeout de Vercel (Hobby=10s puede ser poco para cadenas largas)
 
 ---
 
-## ORDEN DE PRIORIDAD PARA HACERLO REAL
+## ESTADO ACTUAL
 
-### Fase 1 — Backend + IA (crítico)
-1. Crear Edge Functions en `api/` que reciban webhooks al crear solicitudes
-2. Integrar OpenAI/Together API — llamar al LLM con el prompt del orchestrator
-3. Pipeline de orquestación: Research → Strategy → Design → Content → Dev → SEO → QA → Consolidation → CEO → Cliente
-4. Que los agentes generen entregables reales y los inserten en Supabase
-5. Chat real: enviar mensaje → consultar LLM → guardar respuesta en `agent_messages`
-
-### Fase 2 — Autenticación y UX completo
-6. Página de Login/Register con Supabase Auth
-7. Logout funcional en Header
-8. Dashboard real consultando Supabase
-9. Settings persistente (guardar en Supabase o localStorage)
-10. Arreglar bug de import en RequestDetail.jsx
-
-### Fase 3 — Consistencia y pulido
-11. Sincronizar: 112 .md ↔ 41 JS ↔ 31 SQL (unificar a una sola fuente de verdad)
-12. Agents page: leer de tabla `agents` de Supabase
-13. Subida de archivos con Supabase Storage
-14. Notificaciones en tiempo real (Supabase Realtime)
-15. Pruebas automatizadas
+| Área | % |
+|---|---|
+| UI / Frontend visual | **90%** |
+| CRUD contra Supabase | **90%** |
+| Autenticación | **80%** |
+| Integración con IA (Claude) | **100%** (backend listo, falta API key del usuario) |
+| Orquestación de agentes | **100%** (backend listo) |
+| Chat con agentes | **100%** (backend listo) |
+| Definiciones de agentes (.md) | **100%** |
+| Consistencia agentes (.md vs JS vs SQL) | **30%** |
+| **GLOBAL** | **~80%**
 
 ---
 
@@ -159,12 +153,46 @@ API Key de IA se configura en Settings (pero no se guarda aún).
 
 ---
 
+## ÚLTIMA ACTUALIZACIÓN — Backend real con Claude Sonnet
+
+✅ API backend completa (Vercel Serverless Functions):
+  - api/orchestrate.js — orquestación: recibe requestId, llama a Claude, activa agentes en cadena
+  - api/chat.js — chat en tiempo real con agentes via Claude
+  - api/lib/agents.js — 11 agentes con prompts en español + 7 cadenas de orquestación
+  - api/lib/anthropic.js — helper para llamar Claude Sonnet
+  - api/lib/supabase.js — cliente admin para operaciones de backend
+
+✅ Frontend actualizado:
+  - NewRequest.jsx — crea solicitud + dispara orquestación automáticamente
+  - AgentChat.jsx — chat real contra Claude con historial de conversación
+  - Dashboard.jsx — consulta datos reales de Supabase (stats y solicitudes)
+  - Header.jsx — logout funcional + link a login
+  - Settings.jsx — guarda API key en localStorage y la envía al backend
+  - Login.jsx — login/register con Supabase Auth
+  - RequestDetail.jsx — bugfix (supabase no importado)
+  - api.js — nuevas funciones startOrchestration() y sendChatMessage()
+
+## PENDIENTE PARA PRÓXIMA SESIÓN
+
+### Fase 1 — Configuración para que funcione en producción
+1. ⬜ El usuario debe obtener:
+   - ANTHROPIC_API_KEY de https://console.anthropic.com
+   - SUPABASE_SERVICE_ROLE_KEY de Supabase > Project Settings > API
+2. ⬜ Agregar ANTHROPIC_API_KEY y SUPABASE_SERVICE_ROLE_KEY como variables de entorno en Vercel
+3. ⬜ Ejecutar migraciones SQL pendientes en Supabase SQL Editor
+4. ⬜ El .env ya tiene las variables pero con valores vacíos (el usuario llena)
+
+### Fase 2 — Mejoras pendientes
+5. ⬜ Página de Agents.js: conectar a tabla `agents` de Supabase en vez de datos hardcodeados
+6. ⬜ Revisar límite de timeout de Vercel (Hobby=10s, Pro=60s)
+7. ⬜ Unificar 112 .md ↔ 41 JS ↔ 31 SQL (sincronizar agentes)
+8. ⬜ Subida de archivos con Supabase Storage
+9. ⬜ Pruebas automatizadas
+
 ## PRÓXIMA SESIÓN — CONTINUAR DESDE AQUÍ
 
-Lo último que se hizo:
-- ✅ DeliverablePreview componente creado
-- ✅ RequestDetail conectado a Supabase (falta arreglar bug import L38)
-- ✅ Approvals con flujo completo: aprobar, rechazar, entregar al cliente
-- ✅ SQL actualizado con deliverable_type, language, client_delivered
-- ✅ Reporte de estado del proyecto
-- ❌ El usuario quiere que TODO sea real — empezar por Fase 1 (Edge Functions + LLM)
+Pasos para arrancar:
+1. `npm run dev` para iniciar frontend
+2. Llenar ANTHROPIC_API_KEY en .env o via Settings
+3. Llenar SUPABASE_SERVICE_ROLE_KEY en .env
+4. Probar creando una solicitud y viendo cómo los agentes generan entregables
