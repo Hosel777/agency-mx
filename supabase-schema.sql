@@ -86,16 +86,20 @@ ALTER TABLE public.deliverables ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.agents ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para client_requests
+DROP POLICY IF EXISTS "users_see_own_requests" ON public.client_requests;
 CREATE POLICY "users_see_own_requests" ON public.client_requests
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "users_insert_own_requests" ON public.client_requests;
 CREATE POLICY "users_insert_own_requests" ON public.client_requests
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "users_update_own_requests" ON public.client_requests;
 CREATE POLICY "users_update_own_requests" ON public.client_requests
     FOR UPDATE USING (auth.uid() = user_id);
 
 -- Políticas para agent_messages
+DROP POLICY IF EXISTS "users_see_own_agent_messages" ON public.agent_messages;
 CREATE POLICY "users_see_own_agent_messages" ON public.agent_messages
     FOR SELECT USING (
         EXISTS (
@@ -105,6 +109,7 @@ CREATE POLICY "users_see_own_agent_messages" ON public.agent_messages
     );
 
 -- Políticas para deliverables
+DROP POLICY IF EXISTS "users_see_own_deliverables" ON public.deliverables;
 CREATE POLICY "users_see_own_deliverables" ON public.deliverables
     FOR SELECT USING (
         EXISTS (
@@ -114,6 +119,7 @@ CREATE POLICY "users_see_own_deliverables" ON public.deliverables
     );
 
 -- Políticas para agents (público de solo lectura)
+DROP POLICY IF EXISTS "agents_readable_by_all" ON public.agents;
 CREATE POLICY "agents_readable_by_all" ON public.agents
     FOR SELECT USING (true);
 
