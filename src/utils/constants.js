@@ -1,5 +1,7 @@
 export const REQUEST_STATUS = {
   PENDING: 'pending',
+  QUOTING: 'quoting',
+  QUOTE_SENT: 'quote_sent',
   IN_PROGRESS: 'in_progress',
   REVIEW: 'review',
   APPROVED: 'approved',
@@ -9,6 +11,8 @@ export const REQUEST_STATUS = {
 
 export const STATUS_LABELS = {
   pending: 'Pendiente',
+  quoting: 'Generando presupuesto',
+  quote_sent: 'Presupuesto enviado',
   in_progress: 'En progreso',
   review: 'En revisión',
   approved: 'Aprobado',
@@ -18,6 +22,8 @@ export const STATUS_LABELS = {
 
 export const STATUS_COLORS = {
   pending: 'badge-yellow',
+  quoting: 'badge-purple',
+  quote_sent: 'badge-blue',
   in_progress: 'badge-blue',
   review: 'badge-purple',
   approved: 'badge-green',

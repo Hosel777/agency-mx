@@ -1,6 +1,7 @@
 import { supabase } from './lib/supabase.js'
 import { callClaude } from './lib/anthropic.js'
 import { CHAINS, AGENT_PROMPTS } from './lib/agents.js'
+import { formatBrandContext } from './brand-utils.js'
 
 async function addLog(requestId, agent, text, level = 'info') {
   const log = { time: new Date().toISOString(), agent, text, level }
@@ -10,12 +11,146 @@ async function addLog(requestId, agent, text, level = 'info') {
   await supabase.from('client_requests').update({ orchestration_logs: logs }).eq('id', requestId)
 }
 
+async function runOrchestrator(requestId, request, apiKey) {
+  const prompt = AGENT_PROMPTS['agents-orchestrator']
+  const msg = `Analiza la siguiente solicitud de marketing:
+
+Título: ${request.title}
+Descripción: ${request.description}
+Tipo de proyecto: ${request.project_type}
+Presupuesto: $${request.budget || 'No definido'}
+Fecha límite: ${request.deadline || 'No definida'}
+Referencias: ${request.refs || 'Ninguna'}
+
+Genera el plan de ejecución en formato JSON. Recuerda que debes definir qué cadena de agentes usar y qué debe producir cada uno.`
+
+  const response = await callClaude(prompt.systemPrompt, [{ role: 'user', content: msg }], apiKey)
+
+  let plan
+  try {
+    const jsonMatch = response.match(/\{[\s\S]*\}/)
+    plan = jsonMatch ? JSON.parse(jsonMatch[0]) : null
+  } catch { plan = null }
+
+  const chainId = plan?.chain || request.project_type || 'full'
+  const chain = CHAINS[chainId] || CHAINS.full
+
+  const result = { plan, chainId, chain, response }
+  return result
+}
+
+async function handleQuoteMode(requestId, apiKey, res) {
+  try {
+    const { data: request, error: reqError } = await supabase
+      .from('client_requests')
+      .select('*')
+      .eq('id', requestId)
+      .single()
+
+    if (reqError || !request) {
+      return res.status(404).json({ error: 'Request not found' })
+    }
+
+    await supabase
+      .from('client_requests')
+      .update({ status: 'quoting' })
+      .eq('id', requestId)
+
+    // Paso 1: Ejecutar el Orquestador para generar el plan
+    const orcResult = await runOrchestrator(requestId, request, apiKey)
+
+    await supabase.from('agent_messages').insert({
+      request_id: requestId,
+      agent_name: 'Agents Orchestrator',
+      agent_id: 'agents-orchestrator',
+      role: 'assistant',
+      content: orcResult.response
+    })
+
+    // Guardar el plan en la solicitud para usarlo después en la ejecución
+    const planData = {
+      chain: orcResult.chainId,
+      agents: orcResult.chain.agents,
+      agentes: orcResult.plan?.agentes || [],
+      entregables_esperados: orcResult.plan?.entregables_esperados || []
+    }
+
+    await supabase
+      .from('client_requests')
+      .update({ orchestration_plan: planData })
+      .eq('id', requestId)
+
+    // Paso 2: Ejecutar el Sales Agent con el plan ya definido
+    const salesAgent = AGENT_PROMPTS['sales']
+    const agentesList = orcResult.chain.agents
+      .map(id => AGENT_PROMPTS[id]?.name || id)
+      .join(', ')
+
+    const salesMsg = `Genera un presupuesto profesional para la siguiente solicitud:
+
+Título: ${request.title}
+Descripción: ${request.description}
+Tipo de proyecto: ${request.project_type} (${orcResult.chain.label})
+Presupuesto del cliente: $${request.budget || 'No especificado'}
+Fecha límite: ${request.deadline || 'No especificada'}
+Referencias: ${request.refs || 'Ninguna'}
+
+AGENTES A ACTIVAR (${orcResult.chain.agents.length}):
+${agentesList}
+
+Basado en estos agentes/servicios, genera un presupuesto detallado con:
+- Precio individual por cada servicio/agente
+- Precio total del proyecto
+- Forma de pago sugerida
+- Tiempo de entrega estimado`
+
+    const quote = await callClaude(salesAgent.systemPrompt, [{ role: 'user', content: salesMsg }], apiKey)
+
+    await supabase.from('agent_messages').insert({
+      request_id: requestId,
+      agent_name: 'Sales',
+      agent_id: 'sales',
+      role: 'assistant',
+      content: quote
+    })
+
+    await supabase.from('deliverables').insert({
+      request_id: requestId,
+      agent_id: 'sales',
+      agent_name: 'Sales',
+      name: `📊 Presupuesto: ${request.title}`,
+      description: `Presupuesto generado por Sales Agent para: ${request.title}`,
+      content: quote,
+      deliverable_type: 'text',
+      status: 'completed'
+    })
+
+    await supabase
+      .from('client_requests')
+      .update({ status: 'quote_sent' })
+      .eq('id', requestId)
+
+    return res.status(200).json({
+      success: true,
+      mode: 'quote',
+      requestId,
+      plan: planData,
+      quote
+    })
+
+  } catch (error) {
+    console.error('Quote error:', error)
+    await supabase.from('client_requests').update({ status: 'error' }).eq('id', requestId)
+    return res.status(500).json({ error: error.message })
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { requestId, apiKey: bodyKey } = req.body
+  const { requestId, apiKey: bodyKey, mode } = req.body
   if (!requestId) {
     return res.status(400).json({ error: 'requestId required' })
   }
@@ -23,6 +158,11 @@ export default async function handler(req, res) {
   const apiKey = bodyKey || process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured. Configúrala en Settings o en variables de entorno.' })
+  }
+
+  // Mode "quote": solo ejecuta el Sales Agent para generar presupuesto
+  if (mode === 'quote') {
+    return handleQuoteMode(requestId, apiKey, res)
   }
 
   try {
@@ -44,10 +184,29 @@ export default async function handler(req, res) {
       .update({ status: 'in_progress' })
       .eq('id', requestId)
 
-    // --- Step 1: Orchestrator ---
-    await addLog(requestId, 'Agents Orchestrator', 'Analizando solicitud y generando plan de ejecución...')
-    const orchestratorPrompt = AGENT_PROMPTS['agents-orchestrator']
-    const orchestratorMsg = `Analiza la siguiente solicitud de marketing:
+    // --- Step 1: Use saved plan (from quote mode) or run orchestrator ---
+    let plan, chainId, chain, agentSequence, agentInstructions
+
+    if (request.orchestration_plan) {
+      // Reuse plan from quote step
+      const saved = request.orchestration_plan
+      chainId = saved.chain || request.project_type || 'full'
+      chain = CHAINS[chainId] || CHAINS.full
+      agentSequence = chain.agents
+      plan = saved
+
+      agentInstructions = {}
+      if (saved.agentes) {
+        saved.agentes.forEach(a => { agentInstructions[a.id] = a.instrucciones })
+      }
+
+      await addLog(requestId, 'Sistema', 'Usando plan generado durante el presupuesto')
+      await addLog(requestId, 'Agents Orchestrator', `Plan recuperado: ${chain.label} (${agentSequence.length} agentes)`)
+    } else {
+      // Run orchestrator to generate plan
+      await addLog(requestId, 'Agents Orchestrator', 'Analizando solicitud y generando plan de ejecución...')
+      const orchestratorPrompt = AGENT_PROMPTS['agents-orchestrator']
+      const orchestratorMsg = `Analiza la siguiente solicitud de marketing:
 
 Título: ${request.title}
 Descripción: ${request.description}
@@ -58,45 +217,48 @@ Referencias: ${request.refs || 'Ninguna'}
 
 Genera el plan de ejecución en formato JSON. Recuerda que debes definir qué cadena de agentes usar y qué debe producir cada uno.`
 
-    const orchestratorResponse = await callClaude(
-      orchestratorPrompt.systemPrompt,
-      [{ role: 'user', content: orchestratorMsg }],
-      apiKey
-    )
+      const orchestratorResponse = await callClaude(
+        orchestratorPrompt.systemPrompt,
+        [{ role: 'user', content: orchestratorMsg }],
+        apiKey
+      )
 
-    await addLog(requestId, 'Agents Orchestrator', 'Plan de ejecución generado')
+      await addLog(requestId, 'Agents Orchestrator', 'Plan de ejecución generado')
 
-    await supabase.from('agent_messages').insert({
-      request_id: requestId,
-      agent_name: 'Agents Orchestrator',
-      agent_id: 'agents-orchestrator',
-      role: 'assistant',
-      content: orchestratorResponse
-    })
+      await supabase.from('agent_messages').insert({
+        request_id: requestId,
+        agent_name: 'Agents Orchestrator',
+        agent_id: 'agents-orchestrator',
+        role: 'assistant',
+        content: orchestratorResponse
+      })
 
-    // Parse orchestrator response
-    let plan
-    try {
-      const jsonMatch = orchestratorResponse.match(/\{[\s\S]*\}/)
-      plan = jsonMatch ? JSON.parse(jsonMatch[0]) : null
-    } catch {
-      plan = null
-    }
+      try {
+        const jsonMatch = orchestratorResponse.match(/\{[\s\S]*\}/)
+        plan = jsonMatch ? JSON.parse(jsonMatch[0]) : null
+      } catch { plan = null }
 
-    const chainId = plan?.chain || request.project_type || 'full'
-    const chain = CHAINS[chainId] || CHAINS.full
-    const agentSequence = chain.agents
+      chainId = plan?.chain || request.project_type || 'full'
+      chain = CHAINS[chainId] || CHAINS.full
+      agentSequence = chain.agents
 
-    await addLog(requestId, 'Agents Orchestrator', `Cadena seleccionada: ${chain.label} (${agentSequence.length} agentes)`)
+      await addLog(requestId, 'Agents Orchestrator', `Cadena seleccionada: ${chain.label} (${agentSequence.length} agentes)`)
 
-    const agentInstructions = {}
-    if (plan?.agentes) {
-      plan.agentes.forEach(a => { agentInstructions[a.id] = a.instrucciones })
+      agentInstructions = {}
+      if (plan?.agentes) {
+        plan.agentes.forEach(a => { agentInstructions[a.id] = a.instrucciones })
+      }
+
+      // Save plan for future use
+      await supabase.from('client_requests').update({
+        orchestration_plan: { chain: chainId, agents: agentSequence, agentes: plan?.agentes || [] }
+      }).eq('id', requestId)
     }
 
     // --- Step 2: Execute each agent ---
     const completedDeliverables = []
-    let previousContext = `Solicitud original:\nTítulo: ${request.title}\nDescripción: ${request.description}\n\n`
+    const brandContext = formatBrandContext(request.brand_data, request.images)
+    let previousContext = `Solicitud original:\nTítulo: ${request.title}\nDescripción: ${request.description}\n${brandContext}\n`
 
     for (let i = 0; i < agentSequence.length; i++) {
       const agentId = agentSequence[i]

@@ -64,13 +64,17 @@ function getApiKey() {
   return localStorage.getItem('agency_mx_anthropic_key') || undefined
 }
 
-export async function startOrchestration(requestId) {
+export async function startOrchestration(requestId, mode = 'execute') {
   const response = await fetch('/api/orchestrate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ requestId, apiKey: getApiKey() })
+    body: JSON.stringify({ requestId, apiKey: getApiKey(), mode })
   })
   return response.json()
+}
+
+export async function generateQuote(requestId) {
+  return startOrchestration(requestId, 'quote')
 }
 
 export async function sendChatMessage(requestId, message, agentId = null) {
@@ -78,6 +82,15 @@ export async function sendChatMessage(requestId, message, agentId = null) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ requestId, message, agentId, apiKey: getApiKey() })
+  })
+  return response.json()
+}
+
+export async function deployWebsite(deliverableId, requestId, content, title) {
+  const response = await fetch('/api/deploy-website', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ deliverableId, requestId, content, title })
   })
   return response.json()
 }

@@ -13,8 +13,13 @@ CREATE TABLE IF NOT EXISTS public.client_requests (
     budget NUMERIC,
     deadline DATE,
     refs TEXT DEFAULT '',
-    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'review', 'approved', 'completed', 'rejected')),
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'quoting', 'quote_sent', 'in_progress', 'review', 'approved', 'completed', 'rejected')),
     orchestration_logs JSONB DEFAULT '[]'::jsonb,
+    orchestration_plan JSONB DEFAULT NULL,
+    brand_data JSONB DEFAULT NULL,
+    images JSONB DEFAULT NULL,
+    client_email TEXT,
+    source TEXT DEFAULT 'manual',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -22,6 +27,11 @@ CREATE TABLE IF NOT EXISTS public.client_requests (
 -- Migración segura si la tabla ya existe sin status
 ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
 ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS orchestration_logs JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS orchestration_plan JSONB DEFAULT NULL;
+ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS brand_data JSONB DEFAULT NULL;
+ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS images JSONB DEFAULT NULL;
+ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS client_email TEXT;
+ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'manual';
 
 -- Tabla de mensajes de agentes
 CREATE TABLE IF NOT EXISTS public.agent_messages (
@@ -59,6 +69,8 @@ ALTER TABLE public.deliverables ADD COLUMN IF NOT EXISTS deliverable_type TEXT D
 ALTER TABLE public.deliverables ADD COLUMN IF NOT EXISTS language TEXT;
 ALTER TABLE public.deliverables ADD COLUMN IF NOT EXISTS client_delivered BOOLEAN DEFAULT false;
 ALTER TABLE public.deliverables ADD COLUMN IF NOT EXISTS client_delivered_at TIMESTAMPTZ;
+ALTER TABLE public.deliverables ADD COLUMN IF NOT EXISTS deployed BOOLEAN DEFAULT false;
+ALTER TABLE public.deliverables ADD COLUMN IF NOT EXISTS deployed_at TIMESTAMPTZ;
 
 -- Tabla de agentes
 CREATE TABLE IF NOT EXISTS public.agents (

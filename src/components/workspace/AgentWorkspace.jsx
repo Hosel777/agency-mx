@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../services/supabase'
-import { fetchRequest, fetchDeliverables, fetchAgentMessages, startOrchestration, sendChatMessage } from '../../services/api'
+import { fetchRequest, fetchDeliverables, fetchAgentMessages, startOrchestration, sendChatMessage, deployWebsite, generateQuote } from '../../services/api'
 import { STATUS_LABELS, STATUS_COLORS } from '../../utils/constants'
 import {
   Bot, FileText, Globe, Image as ImageIcon, Code2, Download,
@@ -82,7 +82,7 @@ function FileTree({ deliverables, activeFile, onSelect, agentMessages }) {
 }
 
 // ─── Editor Panel ────────────────────────────────────────────
-function EditorPanel({ file, onDeliver }) {
+function EditorPanel({ file, onDeliver, onDeploy, deploying }) {
   if (!file) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500 bg-gray-50">
@@ -141,6 +141,26 @@ function EditorPanel({ file, onDeliver }) {
           {file.client_delivered && <span className="text-green-600 text-xs">✅ Entregado</span>}
         </div>
         <div className="flex items-center gap-2">
+          {file.deliverable_type === 'html' && file.agent_id === 'developer' && !file.deployed && onDeploy && (
+            <button
+              onClick={() => onDeploy(file)}
+              disabled={deploying}
+              className="text-xs bg-gradient-to-r from-agency-500 to-purple-600 text-white px-3 py-1 rounded hover:opacity-90 disabled:opacity-50 flex items-center gap-1"
+            >
+              {deploying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Globe className="w-3 h-3" />}
+              {deploying ? 'Publicando...' : 'Publicar Web 🌐'}
+            </button>
+          )}
+          {file.file_url && file.deployed && (
+            <a
+              href={file.file_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 flex items-center gap-1"
+            >
+              <Globe className="w-3 h-3" /> Ver Web
+            </a>
+          )}
           {!file.client_delivered && file.status === 'approved' && onDeliver && (
             <button onClick={() => onDeliver(file.id)} className="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
               Entregar al Cliente
@@ -193,7 +213,9 @@ export default function AgentWorkspace({ request }) {
   const [activePanel, setActivePanel] = useState('editor') // editor | terminal
   const [logs, setLogs] = useState([])
   const [orchestrating, setOrchestrating] = useState(false)
+  const [quoting, setQuoting] = useState(false)
   const [delivering, setDelivering] = useState(false)
+  const [deploying, setDeploying] = useState(false)
   const [chatMsg, setChatMsg] = useState('')
   const [chatSending, setChatSending] = useState(false)
 
@@ -230,6 +252,26 @@ export default function AgentWorkspace({ request }) {
     setLogs(prev => [...prev, { time, agent, text, level }])
   }
 
+  const handleGenerateQuote = async () => {
+    setQuoting(true)
+    addLog('Sistema', 'Generando presupuesto...')
+    addLog('Agents Orchestrator', 'Analizando solicitud para plan de ejecución...')
+
+    try {
+      const result = await generateQuote(request.id)
+      if (result.success) {
+        addLog('Sales', 'Presupuesto generado exitosamente')
+        await loadData()
+      } else {
+        addLog('Sistema', `Error: ${result.error}`, 'error')
+      }
+    } catch (err) {
+      addLog('Sistema', `Error de conexión: ${err.message}`, 'error')
+    }
+
+    setQuoting(false)
+  }
+
   const handleOrchestrate = async () => {
     setOrchestrating(true)
     addLog('Sistema', 'Iniciando orquestación...')
@@ -263,6 +305,29 @@ export default function AgentWorkspace({ request }) {
       addLog('Sistema', `Entregable marcado como entregado al cliente`, 'warn')
     }
     setDelivering(false)
+  }
+
+  const handleDeployWebsite = async (file) => {
+    if (!file?.content || deploying) return
+    setDeploying(true)
+    addLog('Sistema', `Publicando sitio web...`, 'info')
+
+    try {
+      const result = await deployWebsite(file.id, request.id, file.content, file.name)
+      if (result.success) {
+        addLog('Sistema', `¡Sitio web publicado! 🌐 ${result.url}`, 'info')
+        setDeliverables(prev => prev.map(d =>
+          d.id === file.id ? { ...d, deployed: true, deployed_at: new Date().toISOString(), file_url: result.url } : d
+        ))
+        await loadData()
+      } else {
+        addLog('Sistema', `Error al publicar: ${result.error}`, 'error')
+      }
+    } catch (err) {
+      addLog('Sistema', `Error de conexión: ${err.message}`, 'error')
+    }
+
+    setDeploying(false)
   }
 
   const handleChatSend = async () => {
@@ -306,6 +371,21 @@ export default function AgentWorkspace({ request }) {
         </div>
         <div className="flex items-center gap-2">
           {request.status === 'pending' && (
+            <button
+              onClick={handleGenerateQuote}
+              disabled={quoting}
+              className="btn-primary text-xs px-4 py-2"
+            >
+              {quoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+              {quoting ? 'Generando presupuesto...' : 'Generar Presupuesto'}
+            </button>
+          )}
+          {request.status === 'quoting' && (
+            <span className="flex items-center gap-1.5 text-xs font-medium text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Generando presupuesto...
+            </span>
+          )}
+          {request.status === 'quote_sent' && (
             <button
               onClick={handleOrchestrate}
               disabled={orchestrating}
@@ -359,7 +439,7 @@ export default function AgentWorkspace({ request }) {
           {/* Panel content */}
           <div className="flex-1 overflow-hidden">
             {activePanel === 'editor' ? (
-              <EditorPanel file={activeFile} onDeliver={handleDeliver} />
+              <EditorPanel file={activeFile} onDeliver={handleDeliver} onDeploy={handleDeployWebsite} deploying={deploying} />
             ) : (
               <LiveTerminal logs={logs} />
             )}
