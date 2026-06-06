@@ -1,7 +1,7 @@
 # CONTEXTO DEL PROYECTO — Agency MX
 
 > Guardar este archivo cada vez que se avance para no perder el hilo si se cuelga o apaga la PC.
-> Última actualización: 5 Junio 2026 — Sesión 4: AgentWorkspace tipo VSCode + logs en vivo
+> Última actualización: 5 Junio 2026 — Sesión 5: Deploy pendiente, faltan keys
 
 ---
 
@@ -269,7 +269,10 @@ ANTHROPIC_API_KEY=           <-- obtener de https://console.anthropic.com
 - Login.jsx, Dashboard real, Chat real, Settings persistente, Logout
 - Bugfix: supabase import en RequestDetail
 
-### Sesión 4 — AgentWorkspace + logs en vivo (Commit: 8a4529b)
+### Sesión 5 — Deploy pendiente por keys (Commit: d6d9c7d)
+- Vercel project linked: hectors-projects-eeb9a0da/agency-mx
+- .gitignore actualizado (.vercel, .env.local)
+- **Faltan** para terminar deploy: ANTHROPIC_API_KEY, SUPABASE_SERVICE_ROLE_KEY, SQL migration, Storage bucket
 - AgentWorkspace: layout 3 paneles tipo VSCode (explorador | editor | chat)
 - FileExplorer: árbol de entregables por agente con íconos y estados
 - EditorPanel: vista previa de texto, HTML (iframe), imagen, código con pestañas
