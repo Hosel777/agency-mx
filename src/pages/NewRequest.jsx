@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabase'
 import { startOrchestration } from '../services/api'
 import toast from 'react-hot-toast'
-import { Send, ArrowLeft, Loader2, Paperclip } from 'lucide-react'
+import { Send, ArrowLeft, Loader2, Paperclip, Bot } from 'lucide-react'
 import FileUpload from '../components/common/FileUpload'
 
 const projectTypes = [
@@ -67,22 +67,29 @@ export default function NewRequest() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div>
-        <button
-          onClick={() => navigate(-1)}
-          className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 mb-2"
-        >
-          <ArrowLeft className="w-4 h-4" /> Volver
-        </button>
-        <h1 className="text-2xl font-bold">Nueva Solicitud</h1>
-        <p className="text-gray-500 text-sm">Describe el proyecto y los agentes se encargarán</p>
+    <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <button
+            onClick={() => navigate(-1)}
+            className="btn-ghost text-sm mb-1"
+          >
+            <ArrowLeft className="w-4 h-4" /> Volver
+          </button>
+          <h1 className="page-title">Nueva Solicitud</h1>
+          <p className="text-muted">Describe el proyecto y los agentes se encargarán</p>
+        </div>
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-agency-50 to-agency-100 flex items-center justify-center">
+          <Bot className="w-6 h-6 text-agency-600" />
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="card p-6 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="card p-8 space-y-6">
+        <div className="grid grid-cols-2 gap-5">
           <div className="col-span-2">
-            <label className="block text-sm font-medium mb-1">Título del proyecto *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Título del proyecto *</label>
             <input
               name="title"
               value={form.title}
@@ -93,7 +100,7 @@ export default function NewRequest() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Tipo de proyecto *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Tipo de proyecto *</label>
             <select name="projectType" value={form.projectType} onChange={handleChange} className="input-field">
               <option value="">Selecciona...</option>
               {projectTypes.map(t => <option key={t} value={t}>{t}</option>)}
@@ -101,7 +108,7 @@ export default function NewRequest() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Nombre del cliente</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre del cliente</label>
             <input
               name="clientName"
               value={form.clientName}
@@ -112,7 +119,7 @@ export default function NewRequest() {
           </div>
 
           <div className="col-span-2">
-            <label className="block text-sm font-medium mb-1">Descripción del proyecto *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Descripción del proyecto *</label>
             <textarea
               name="description"
               value={form.description}
@@ -124,7 +131,7 @@ export default function NewRequest() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Presupuesto (USD)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Presupuesto (USD)</label>
             <input
               name="budget"
               type="number"
@@ -136,7 +143,7 @@ export default function NewRequest() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Fecha límite</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Fecha límite</label>
             <input
               name="deadline"
               type="date"
@@ -147,7 +154,7 @@ export default function NewRequest() {
           </div>
 
           <div className="col-span-2">
-            <label className="block text-sm font-medium mb-1">Referencias / URLs</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Referencias / URLs</label>
             <textarea
               name="refs"
               value={form.refs}
@@ -159,7 +166,7 @@ export default function NewRequest() {
           </div>
 
           <div className="col-span-2">
-            <label className="block text-sm font-medium mb-1 flex items-center gap-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1">
               <Paperclip className="w-4 h-4" /> Archivos adjuntos
             </label>
             <FileUpload
@@ -170,9 +177,13 @@ export default function NewRequest() {
           </div>
         </div>
 
-        <div className="pt-4 border-t flex justify-end">
-          <button type="submit" disabled={submitting} className="btn-primary flex items-center gap-2">
-            <Send className="w-4 h-4" />
+        <div className="pt-4 border-t border-gray-100 flex justify-end">
+          <button type="submit" disabled={submitting} className="btn-primary">
+            {submitting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
             {submitting ? 'Enviando...' : 'Enviar a los Agentes'}
           </button>
         </div>

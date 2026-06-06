@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, ClipboardList, PlusCircle, Bot,
-  CheckCircle2, Settings, ChevronRight
+  LayoutDashboard, PlusCircle, Bot,
+  CheckCircle2, Settings, Sparkles
 } from 'lucide-react'
 
 const navItems = [
@@ -14,36 +14,55 @@ const navItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-white border-r flex flex-col">
-      <div className="p-5 border-b">
-        <h1 className="text-xl font-bold text-agency-700 flex items-center gap-2">
-          <Bot className="w-6 h-6" />
-          Agency MX
-        </h1>
-        <p className="text-xs text-gray-500 mt-1">Agencia de Marketing con IA</p>
+    <aside className="w-64 bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 flex flex-col flex-shrink-0 shadow-sidebar">
+      {/* Logo */}
+      <div className="px-5 py-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-agency-400 to-agency-600 flex items-center justify-center shadow-lg shadow-agency-500/30">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-white tracking-tight">Agency MX</h1>
+            <p className="text-[11px] text-gray-500 font-medium tracking-wide">Marketing con IA</p>
+          </div>
+        </div>
       </div>
-      <nav className="flex-1 p-3 space-y-1">
+
+      {/* Navigation */}
+      <nav className="flex-1 px-3 space-y-1">
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
             end={to === '/'}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
                 isActive
-                  ? 'bg-agency-50 text-agency-700'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-white/10 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`
             }
           >
-            <Icon className="w-5 h-5" />
-            {label}
-            <ChevronRight className="w-4 h-4 ml-auto opacity-40" />
+            <Icon className="w-5 h-5 flex-shrink-0" />
+            <span>{label}</span>
+            {to === '/aprobaciones' && (
+              <span className="ml-auto w-2 h-2 rounded-full bg-amber-400 animate-pulse-slow" />
+            )}
           </NavLink>
         ))}
       </nav>
-      <div className="p-4 border-t text-xs text-gray-400">
-        v1.0.0 — Agency MX
+
+      {/* Footer */}
+      <div className="px-5 py-4 border-t border-white/5">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-agency-400/20 to-agency-600/20 flex items-center justify-center">
+            <Bot className="w-4 h-4 text-agency-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-gray-400 truncate">v2.0 — IA Agency</p>
+            <p className="text-[10px] text-gray-600">42 agentes activos</p>
+          </div>
+        </div>
       </div>
     </aside>
   )
