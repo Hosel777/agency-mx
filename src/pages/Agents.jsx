@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabase'
 import AGENTS_HIERARCHY from '../utils/agents'
-import { Bot, ChevronDown, ChevronRight, Loader2 } from 'lucide-react'
+import { Bot, ChevronDown, ChevronRight, Loader2, Users, Sparkles } from 'lucide-react'
 
 const DEPT_ORDER = [
   'Estrategia & Research',
@@ -14,6 +14,18 @@ const DEPT_ORDER = [
   'Finanzas & Legal',
   'Soporte & Operaciones',
 ]
+
+const DEPT_ICONS = {
+  'Estrategia & Research': '🎯',
+  'Producto & Diseño': '🎨',
+  'Marketing & Contenido': '📱',
+  'Paid Media': '📊',
+  'Ingeniería': '⚙️',
+  'Testing & QA': '✅',
+  'Ventas & CRM': '🤝',
+  'Finanzas & Legal': '💰',
+  'Soporte & Operaciones': '🛟',
+}
 
 export default function Agents() {
   const [agents, setAgents] = useState([])
@@ -29,24 +41,18 @@ export default function Agents() {
         if (data && data.length > 0) {
           setAgents(data)
         } else {
-          // Fallback: convertir agents.js a flat list
           const flat = AGENTS_HIERARCHY.departments.flatMap(dept =>
             dept.agents.map(a => ({
-              id: a.id,
-              name: a.name,
-              role: a.role,
-              department: dept.name,
-              level: dept.level,
-              description: null,
-              is_active: true,
+              id: a.id, name: a.name, role: a.role,
+              department: dept.name, level: dept.level,
+              description: null, is_active: true,
             }))
           )
           flat.unshift({
             id: AGENTS_HIERARCHY.orchestrator.id,
             name: AGENTS_HIERARCHY.orchestrator.name,
             role: AGENTS_HIERARCHY.orchestrator.role,
-            department: 'Gerencia',
-            level: AGENTS_HIERARCHY.orchestrator.level,
+            department: 'Gerencia', level: 1,
             description: AGENTS_HIERARCHY.orchestrator.description,
             is_active: true,
           })
@@ -67,84 +73,87 @@ export default function Agents() {
     (a, b) => DEPT_ORDER.indexOf(a) - DEPT_ORDER.indexOf(b)
   )
 
-  const toggleDept = (name) => {
-    setExpandedDept(prev => prev === name ? null : name)
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-5 h-5 text-agency-600 animate-spin" />
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Agentes</h1>
-        <p className="text-gray-500 text-sm">
-          {loading
-            ? 'Cargando agentes...'
-            : `${agents.length} agentes de IA de tu agencia virtual`
-          }
-        </p>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="page-title">Agentes</h1>
+          <p className="text-muted mt-0.5">{agents.length} agentes de IA listos para trabajar</p>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-500 bg-white px-4 py-2 rounded-xl border shadow-sm">
+          <Users className="w-4 h-4" />
+          {sortedDepts.filter(d => d !== 'Gerencia').length} departamentos
+        </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 text-agency-600 animate-spin" />
-        </div>
-      ) : (
-        <div className="card p-6">
-          <div className="flex items-center gap-3 p-4 bg-agency-50 rounded-lg border border-agency-200 mb-4">
-            <Bot className="w-8 h-8 text-agency-600" />
-            <div>
-              <p className="font-semibold text-agency-800">
-                {agents.find(a => a.id === 'orchestrator')?.name || 'Agents Orchestrator'}
-              </p>
-              <p className="text-sm text-agency-600">
-                {agents.find(a => a.id === 'orchestrator')?.role || 'Gerente General'}
-                {agents.find(a => a.id === 'orchestrator')?.description
-                  ? ` — ${agents.find(a => a.id === 'orchestrator')?.description}`
-                  : ''}
-              </p>
-            </div>
+      {/* Orchestrator */}
+      <div className="card p-5 bg-gradient-to-r from-agency-600 to-agency-500 border-agency-400 text-white">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+            <Sparkles className="w-6 h-6" />
           </div>
+          <div>
+            <p className="font-semibold text-lg">{agents.find(a => a.id === 'orchestrator')?.name || 'Agents Orchestrator'}</p>
+            <p className="text-sm text-white/80">
+              {agents.find(a => a.id === 'orchestrator')?.role || 'Gerente General'}
+              {agents.find(a => a.id === 'orchestrator')?.description ? ` — ${agents.find(a => a.id === 'orchestrator')?.description}` : ''}
+            </p>
+          </div>
+        </div>
+      </div>
 
-          <div className="space-y-2">
-            {sortedDepts.filter(d => d !== 'Gerencia').map(deptName => (
-              <div key={deptName} className="border rounded-lg overflow-hidden">
-                <button
-                  onClick={() => toggleDept(deptName)}
-                  className="w-full flex items-center justify-between p-3 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    {expandedDept === deptName
-                      ? <ChevronDown className="w-4 h-4 text-gray-400" />
-                      : <ChevronRight className="w-4 h-4 text-gray-400" />
-                    }
-                    <span className="font-medium">{deptName}</span>
-                    <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                      Nivel {grouped[deptName][0]?.level || '-'}
-                    </span>
-                  </div>
-                  <span className="text-xs text-gray-400">{grouped[deptName].length} agentes</span>
-                </button>
+      {/* Departments */}
+      <div className="space-y-2">
+        {sortedDepts.filter(d => d !== 'Gerencia').map(deptName => {
+          const isOpen = expandedDept === deptName
+          const deptAgents = grouped[deptName]
+          return (
+            <div key={deptName} className="card overflow-hidden">
+              <button
+                onClick={() => setExpandedDept(prev => prev === deptName ? null : deptName)}
+                className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{DEPT_ICONS[deptName] || '📋'}</span>
+                  <span className="font-semibold text-gray-900">{deptName}</span>
+                  <span className="badge-gray">{deptAgents[0]?.level || '-'}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-400 font-medium">{deptAgents.length} agentes</span>
+                  {isOpen ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
+                </div>
+              </button>
 
-                {expandedDept === deptName && (
-                  <div className="border-t divide-y">
-                    {grouped[deptName].map(agent => (
-                      <div key={agent.id} className="flex items-center gap-3 px-6 py-3 hover:bg-gray-50">
-                        <Bot className="w-4 h-4 text-agency-500" />
-                        <div>
-                          <p className="text-sm font-medium">{agent.name}</p>
-                          <p className="text-xs text-gray-500">{agent.role}</p>
-                          {agent.description && (
-                            <p className="text-xs text-gray-400 mt-0.5">{agent.description}</p>
-                          )}
-                        </div>
+              {isOpen && (
+                <div className="border-t border-gray-50 divide-y divide-gray-50">
+                  {deptAgents.map(agent => (
+                    <div key={agent.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-gray-50/50 transition-colors">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-agency-50 to-agency-100 flex items-center justify-center flex-shrink-0">
+                        <Bot className="w-4 h-4 text-agency-600" />
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900">{agent.name}</p>
+                        <p className="text-xs text-gray-500">{agent.role}</p>
+                        {agent.description && (
+                          <p className="text-xs text-gray-400 mt-0.5">{agent.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

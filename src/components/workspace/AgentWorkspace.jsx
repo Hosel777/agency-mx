@@ -5,7 +5,7 @@ import { STATUS_LABELS, STATUS_COLORS } from '../../utils/constants'
 import {
   Bot, FileText, Globe, Image as ImageIcon, Code2, Download,
   ChevronRight, ChevronDown, Play, Square, Loader2,
-  MessageSquare, Terminal as TerminalIcon, X, Send
+  MessageSquare, Terminal as TerminalIcon, X, Send, Sparkles
 } from 'lucide-react'
 
 const TYPE_ICONS = { text: FileText, html: Globe, image: ImageIcon, code: Code2, file: Download }
@@ -291,29 +291,37 @@ export default function AgentWorkspace({ request }) {
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col rounded-lg overflow-hidden border">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-900 text-white text-sm border-b border-gray-800">
+      <div className="flex items-center justify-between px-5 py-3 bg-white border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <Bot className="w-5 h-5 text-agency-400" />
-          <span className="font-medium">{request.title}</span>
-          <span className={`px-2 py-0.5 rounded text-xs font-medium ${STATUS_COLORS[request.status]}`}>
-            {STATUS_LABELS[request.status]}
-          </span>
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-agency-400 to-agency-600 flex items-center justify-center shadow-sm">
+            <Sparkles className="w-4.5 h-4.5 text-white" />
+          </div>
+          <div>
+            <span className="font-semibold text-gray-900">{request.title}</span>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className={STATUS_COLORS[request.status]}>{STATUS_LABELS[request.status]}</span>
+              <span className="text-xs text-gray-400">{request.project_type}</span>
+            </div>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {request.status === 'pending' && (
             <button
               onClick={handleOrchestrate}
               disabled={orchestrating}
-              className="flex items-center gap-1.5 text-xs bg-agency-600 hover:bg-agency-700 px-3 py-1.5 rounded disabled:opacity-50"
+              className="btn-primary text-xs px-4 py-2"
             >
               {orchestrating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               {orchestrating ? 'Orquestando...' : 'Ejecutar Agentes'}
             </button>
           )}
           {request.status === 'in_progress' && (
-            <span className="flex items-center gap-1.5 text-xs text-yellow-400">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Agentes trabajando...
             </span>
+          )}
+          {request.status === 'completed' && (
+            <span className="badge-green">Completado</span>
           )}
         </div>
       </div>
@@ -333,18 +341,18 @@ export default function AgentWorkspace({ request }) {
         {/* Center: Editor + Terminal */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Panel tabs */}
-          <div className="flex items-center border-b bg-gray-100 text-xs px-2">
+          <div className="flex items-center border-b bg-gray-50 text-xs px-2">
             <button
               onClick={() => setActivePanel('editor')}
-              className={`px-4 py-2 border-b-2 ${activePanel === 'editor' ? 'border-agency-600 text-agency-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+              className={`px-4 py-2 border-b-2 font-medium ${activePanel === 'editor' ? 'border-agency-600 text-agency-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
             >
-              <FileText className="w-3.5 h-3.5 inline mr-1" /> Editor
+              <FileText className="w-3.5 h-3.5 inline mr-1.5" /> Editor
             </button>
             <button
               onClick={() => setActivePanel('terminal')}
-              className={`px-4 py-2 border-b-2 ${activePanel === 'terminal' ? 'border-agency-600 text-agency-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+              className={`px-4 py-2 border-b-2 font-medium ${activePanel === 'terminal' ? 'border-agency-600 text-agency-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
             >
-              <TerminalIcon className="w-3.5 h-3.5 inline mr-1" /> Terminal
+              <TerminalIcon className="w-3.5 h-3.5 inline mr-1.5" /> Terminal
             </button>
           </div>
 
@@ -360,8 +368,8 @@ export default function AgentWorkspace({ request }) {
 
         {/* Right: Chat Panel */}
         <div className="w-80 border-l flex-shrink-0 flex flex-col bg-white">
-          <div className="px-4 py-2 border-b bg-gray-50 text-sm font-medium flex items-center gap-2">
-            <MessageSquare className="w-4 h-4" /> Chat con Agentes
+          <div className="px-4 py-3 border-b bg-gray-50 text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-agency-500" /> Chat con Agentes
           </div>
           <div className="flex-1 overflow-auto p-3 space-y-3">
             {messages.filter(m => m.agent_name !== 'Usuario' || true).slice(-30).map(msg => (
