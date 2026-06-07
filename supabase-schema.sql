@@ -214,7 +214,7 @@ INSERT INTO public.agents (id, name, role, department, level) VALUES
     ('database-optimizer', 'Database Optimizer', 'Optimización de bases de datos PostgreSQL/MySQL, tuning e indexing.', 'engineering', 6),
     ('devops-automator', 'DevOps Automator', 'CI/CD, infraestructura cloud, automatización y despliegue continuo.', 'engineering', 6),
     ('email-intelligence-engineer', 'Email Intelligence Engineer', 'Procesamiento de emails, extracción estructurada de datos para agentes AI.', 'engineering', 6),
-    ('frontend-developer', 'Frontend Developer', 'Desarrollador frontend experto en React, Vue y tecnologías web modernas.', 'engineering', 6),
+    ('developer', 'Frontend Developer', 'Desarrollador frontend experto en React, Vue y tecnologías web modernas.', 'engineering', 6),
     ('git-workflow-master', 'Git Workflow Master', 'Estrategia de branching, conventional commits y flujo de trabajo Git.', 'engineering', 6),
     ('incident-responder', 'Incident Responder', 'DFIR, contención de brechas y respuesta a incidentes de seguridad.', 'engineering', 6),
     ('mobile-app-builder', 'Mobile App Builder', 'Construye aplicaciones móviles nativas e híbridas con React Native y Flutter.', 'engineering', 6),
