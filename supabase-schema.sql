@@ -26,6 +26,10 @@ CREATE TABLE IF NOT EXISTS public.client_requests (
 
 -- Migración segura si la tabla ya existe sin status
 ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+-- Recrear constraint de status para incluir quote_sent (si la tabla se creó antes de agregarlo)
+ALTER TABLE public.client_requests DROP CONSTRAINT IF EXISTS client_requests_status_check;
+ALTER TABLE public.client_requests ADD CONSTRAINT client_requests_status_check 
+    CHECK (status IN ('pending', 'quoting', 'quote_sent', 'in_progress', 'review', 'approved', 'completed', 'rejected'));
 ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS orchestration_logs JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS orchestration_plan JSONB DEFAULT NULL;
 ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS brand_data JSONB DEFAULT NULL;
