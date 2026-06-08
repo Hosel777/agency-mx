@@ -32,8 +32,8 @@ export default function RequestDetail() {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
+    <div className="space-y-3 h-full min-h-0 flex flex-col">
+      <div className="flex items-center justify-between flex-shrink-0">
         <Link to="/" className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
           <ArrowLeft className="w-4 h-4" /> Dashboard
         </Link>

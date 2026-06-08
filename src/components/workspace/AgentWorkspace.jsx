@@ -515,7 +515,7 @@ export default function AgentWorkspace({ request }) {
     : false
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col rounded-lg overflow-hidden border">
+    <div className="flex-1 min-h-0 flex flex-col rounded-lg overflow-hidden border">
       {/* Top bar */}
       <div className="flex items-center justify-between px-5 py-3 bg-white border-b border-gray-100">
         <div className="flex items-center gap-3">
