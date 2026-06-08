@@ -268,13 +268,13 @@ function EditorPanel({ file, onDeliver, onDeploy, deploying, request, onSaveQuot
       </div>
       <div className="flex-1 overflow-auto p-4">
         {file.agent_id === 'sales' ? (
-          <div className="h-full flex flex-col">
+          <div className="space-y-4">
             <textarea
               value={editContent}
               onChange={e => setEditContent(e.target.value)}
-              className="w-full flex-1 font-mono text-sm p-4 border rounded resize-none mb-4 min-h-[300px]"
+              className="w-full min-h-[200px] font-mono text-sm p-4 border rounded resize-y"
             />
-            <div className="mb-4">
+            <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">Link de pago Stripe:</label>
               <input
                 value={editStripeLink}
@@ -578,7 +578,7 @@ export default function AgentWorkspace({ request }) {
       </div>
 
       {/* Main 3-panel layout */}
-      <div className="flex-1 flex" style={{ height: 'calc(100% - 42px)' }}>
+      <div className="flex-1 flex min-h-0">
         {/* Left: File Explorer */}
         <div className="w-64 border-r border-gray-800 bg-gray-900 flex-shrink-0 overflow-hidden">
           <FileTree
