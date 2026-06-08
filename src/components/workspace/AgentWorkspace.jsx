@@ -87,44 +87,44 @@ function EditorPanel({ file, onDeliver, onDeploy, deploying, request }) {
     return (
       <div className="flex items-start justify-center h-full text-gray-500 bg-gray-50 overflow-y-auto">
         <div className="text-center max-w-2xl w-full px-6 py-8">
-          {request ? (
+              {request ? (
             <div className="text-left bg-white rounded-xl border shadow-sm p-6 space-y-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-1">{reqData.title}</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">{request.title}</h2>
                 <div className="flex items-center gap-3 text-sm text-gray-500">
-                  {reqData.project_type && <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">{reqData.project_type}</span>}
-                  {reqData.source && <span className="text-xs">{reqData.source === 'socialpulse' ? '🌐 SocialPulse' : '📋 Manual'}</span>}
+                  {request.project_type && <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">{request.project_type}</span>}
+                  {request.source && <span className="text-xs">{request.source === 'socialpulse' ? '🌐 SocialPulse' : '📋 Manual'}</span>}
                 </div>
               </div>
 
-              {reqData.description && (
+              {request.description && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-1 uppercase tracking-wide">Descripción</h3>
-                  <p className="text-gray-600 whitespace-pre-wrap text-sm leading-relaxed">{reqData.description}</p>
+                  <p className="text-gray-600 whitespace-pre-wrap text-sm leading-relaxed">{request.description}</p>
                 </div>
               )}
 
               <div className="flex flex-wrap gap-4 text-sm">
-                {reqData.budget && <div><span className="text-gray-500">Presupuesto:</span> <span className="font-medium text-gray-800">${reqData.budget} MXN</span></div>}
-                {reqData.deadline && <div><span className="text-gray-500">Fecha límite:</span> <span className="font-medium text-gray-800">{reqData.deadline}</span></div>}
-                {reqData.client_name && <div><span className="text-gray-500">Cliente:</span> <span className="font-medium text-gray-800">{reqData.client_name}</span></div>}
-                {reqData.client_email && <div><span className="text-gray-500">Email:</span> <span className="font-medium text-gray-800">{reqData.client_email}</span></div>}
+                {request.budget && <div><span className="text-gray-500">Presupuesto:</span> <span className="font-medium text-gray-800">${request.budget} MXN</span></div>}
+                {request.deadline && <div><span className="text-gray-500">Fecha límite:</span> <span className="font-medium text-gray-800">{request.deadline}</span></div>}
+                {request.client_name && <div><span className="text-gray-500">Cliente:</span> <span className="font-medium text-gray-800">{request.client_name}</span></div>}
+                {request.client_email && <div><span className="text-gray-500">Email:</span> <span className="font-medium text-gray-800">{request.client_email}</span></div>}
               </div>
 
-              {reqData.refs && (
+              {request.refs && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-1 uppercase tracking-wide">Referencias</h3>
-                  <p className="text-gray-600 whitespace-pre-wrap text-sm">{reqData.refs}</p>
+                  <p className="text-gray-600 whitespace-pre-wrap text-sm">{request.refs}</p>
                 </div>
               )}
 
-              {reqData.brand_data && renderBrandData(reqData.brand_data)}
+              {request.brand_data && renderBrandData(request.brand_data)}
 
-              {reqData.images && reqData.images.length > 0 && (
+              {request.images && request.images.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">Imágenes</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {reqData.images.map((img, i) => (
+                    {request.images.map((img, i) => (
                       <div key={i} className="relative group rounded-lg overflow-hidden border bg-gray-50">
                         <img src={img.url || img} alt={img.label || `Imagen ${i + 1}`} className="w-full h-32 object-cover" />
                         {img.label && <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-2"><p className="text-xs text-white truncate">{img.label}</p></div>}
@@ -135,9 +135,9 @@ function EditorPanel({ file, onDeliver, onDeploy, deploying, request }) {
               )}
 
               <div className="pt-2 text-center text-xs text-gray-400">
-                {reqData.status === 'pending' ? 'Usa "Generar Presupuesto" para iniciar' :
-                 reqData.status === 'quoting' ? 'Generando presupuesto...' :
-                 reqData.status === 'quote_sent' ? 'Presupuesto listo — ejecutá los agentes' :
+                {request.status === 'pending' ? 'Usa "Generar Presupuesto" para iniciar' :
+                 request.status === 'quoting' ? 'Generando presupuesto...' :
+                 request.status === 'quote_sent' ? 'Presupuesto listo — ejecutá los agentes' :
                  'Entregables disponibles abajo en el explorador'}
               </div>
             </div>
@@ -533,7 +533,7 @@ export default function AgentWorkspace({ request }) {
           {/* Panel content */}
           <div className="flex-1 overflow-hidden">
             {activePanel === 'editor' ? (
-              <EditorPanel file={activeFile} onDeliver={handleDeliver} onDeploy={handleDeployWebsite} deploying={deploying} request={request} />
+              <EditorPanel file={activeFile} onDeliver={handleDeliver} onDeploy={handleDeployWebsite} deploying={deploying} request={reqData} />
             ) : (
               <LiveTerminal logs={logs} />
             )}
