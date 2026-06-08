@@ -102,8 +102,8 @@ export default function Settings() {
                 Claude: Anthropic Console <ExternalLink className="w-3 h-3" />
               </a>
               <span className="text-gray-300 mx-1">|</span>
-              <a href="https://platform.deepseek.com" target="_blank" rel="noopener noreferrer" className="text-agency-600 hover:text-agency-700 font-medium flex items-center gap-0.5">
-                DeepSeek: platform.deepseek.com <ExternalLink className="w-3 h-3" />
+              <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-agency-600 hover:text-agency-700 font-medium flex items-center gap-0.5">
+                OpenRouter: openrouter.ai/keys <ExternalLink className="w-3 h-3" />
               </a>
             </p>
           </div>

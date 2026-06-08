@@ -1,17 +1,14 @@
 const PROVIDER = process.env.LLM_PROVIDER || 'claude'
-const DEEPSEEK_MODEL = process.env.LLM_MODEL || 'deepseek-chat'
-const CLAUDE_MODEL = process.env.LLM_MODEL || 'claude-sonnet-4-20250514'
+const MODEL = process.env.LLM_MODEL || 'claude-sonnet-4-20250514'
 
 export async function callLLM(systemPrompt, messages, apiKey) {
-  if (PROVIDER === 'deepseek') {
-    return callDeepSeek(systemPrompt, messages, apiKey)
+  if (PROVIDER === 'openrouter') {
+    return callOpenRouter(systemPrompt, messages, apiKey)
   }
   return callClaude(systemPrompt, messages, apiKey)
 }
 
-async function callDeepSeek(systemPrompt, messages, apiKey) {
-  const endpoint = 'https://api.deepseek.com/v1/chat/completions'
-
+async function callOpenRouter(systemPrompt, messages, apiKey) {
   const openaiMessages = []
   if (systemPrompt) {
     openaiMessages.push({ role: 'system', content: systemPrompt })
@@ -20,14 +17,16 @@ async function callDeepSeek(systemPrompt, messages, apiKey) {
     openaiMessages.push({ role: msg.role, content: msg.content })
   }
 
-  const response = await fetch(endpoint, {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
+      'Authorization': `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://agency-mx.vercel.app',
+      'X-Title': 'Agency MX'
     },
     body: JSON.stringify({
-      model: DEEPSEEK_MODEL,
+      model: MODEL,
       max_tokens: 4096,
       messages: openaiMessages
     })
@@ -35,7 +34,7 @@ async function callDeepSeek(systemPrompt, messages, apiKey) {
 
   if (!response.ok) {
     const error = await response.text()
-    throw new Error(`DeepSeek API error (${response.status}): ${error}`)
+    throw new Error(`OpenRouter API error (${response.status}): ${error}`)
   }
 
   const data = await response.json()
@@ -51,7 +50,7 @@ async function callClaude(systemPrompt, messages, apiKey) {
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
-      model: CLAUDE_MODEL,
+      model: MODEL,
       max_tokens: 4096,
       system: systemPrompt,
       messages
