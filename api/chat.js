@@ -12,9 +12,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'requestId and message required' })
   }
 
-  const apiKey = bodyKey || process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY
+  const provider = process.env.LLM_PROVIDER || 'claude'
+  const apiKey = bodyKey || (provider === 'openrouter' ? process.env.LLM_API_KEY : (process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY))
   if (!apiKey) {
-    return res.status(500).json({ error: 'API Key no configurada. Configúrala en Settings (ANTHROPIC_API_KEY o LLM_API_KEY).' })
+    return res.status(500).json({ error: `API Key no configurada para ${provider}. Configúrala en Settings o en Vercel (LLM_API_KEY).` })
   }
 
   try {
