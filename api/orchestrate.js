@@ -1,5 +1,5 @@
 import { supabase } from './lib/supabase.js'
-import { callClaude } from './lib/anthropic.js'
+import { callLLM } from './lib/anthropic.js'
 import { CHAINS, AGENT_PROMPTS } from './lib/agents.js'
 import { formatBrandContext } from './brand-utils.js'
 
@@ -24,7 +24,7 @@ Referencias: ${request.refs || 'Ninguna'}
 
 Genera el plan de ejecución en formato JSON. Recuerda que debes definir qué cadena de agentes usar y qué debe producir cada uno.`
 
-  const response = await callClaude(prompt.systemPrompt, [{ role: 'user', content: msg }], apiKey)
+  const response = await callLLM(prompt.systemPrompt, [{ role: 'user', content: msg }], apiKey)
 
   let plan
   try {
@@ -104,7 +104,7 @@ Basado en estos agentes/servicios, genera un presupuesto detallado con:
 - Forma de pago sugerida
 - Tiempo de entrega estimado`
 
-    const quote = await callClaude(salesAgent.systemPrompt, [{ role: 'user', content: salesMsg }], apiKey)
+    const quote = await callLLM(salesAgent.systemPrompt, [{ role: 'user', content: salesMsg }], apiKey)
 
     await supabase.from('agent_messages').insert({
       request_id: requestId,
@@ -155,9 +155,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'requestId required' })
   }
 
-  const apiKey = bodyKey || process.env.ANTHROPIC_API_KEY
+  const apiKey = bodyKey || process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY
   if (!apiKey) {
-    return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured. Configúrala en Settings o en variables de entorno.' })
+    return res.status(500).json({ error: 'API Key no configurada. Configúrala en Settings (ANTHROPIC_API_KEY o LLM_API_KEY).' })
   }
 
   // Mode "quote": solo ejecuta el Sales Agent para generar presupuesto
@@ -217,7 +217,7 @@ Referencias: ${request.refs || 'Ninguna'}
 
 Genera el plan de ejecución en formato JSON. Recuerda que debes definir qué cadena de agentes usar y qué debe producir cada uno.`
 
-      const orchestratorResponse = await callClaude(
+      const orchestratorResponse = await callLLM(
         orchestratorPrompt.systemPrompt,
         [{ role: 'user', content: orchestratorMsg }],
         apiKey
@@ -274,7 +274,7 @@ Genera el plan de ejecución en formato JSON. Recuerda que debes definir qué ca
       }
       agentMessage += `Basándote en la información anterior y el contexto del proyecto, genera tu entregable como ${agentConfig.name}.`
 
-      const agentResponse = await callClaude(
+      const agentResponse = await callLLM(
         agentConfig.systemPrompt,
         [{ role: 'user', content: agentMessage }],
         apiKey

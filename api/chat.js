@@ -1,5 +1,5 @@
 import { supabase } from './lib/supabase.js'
-import { callClaude } from './lib/anthropic.js'
+import { callLLM } from './lib/anthropic.js'
 import { AGENT_PROMPTS } from './lib/agents.js'
 
 export default async function handler(req, res) {
@@ -12,9 +12,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'requestId and message required' })
   }
 
-  const apiKey = bodyKey || process.env.ANTHROPIC_API_KEY
+  const apiKey = bodyKey || process.env.ANTHROPIC_API_KEY || process.env.LLM_API_KEY
   if (!apiKey) {
-    return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured. Configúrala en Settings o en variables de entorno.' })
+    return res.status(500).json({ error: 'API Key no configurada. Configúrala en Settings (ANTHROPIC_API_KEY o LLM_API_KEY).' })
   }
 
   try {
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
       { role: 'user', content: contextIntro + message }
     ]
 
-    const response = await callClaude(agentConfig.systemPrompt, claudeMessages, apiKey)
+    const response = await callLLM(agentConfig.systemPrompt, claudeMessages, apiKey)
 
     // Save assistant response
     await supabase.from('agent_messages').insert({

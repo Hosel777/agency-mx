@@ -83,23 +83,27 @@ export default function Settings() {
               <Bot className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Claude API Key (Anthropic)</h2>
-              <p className="text-xs text-gray-500">Los agentes usan Claude Sonnet para generar contenido</p>
+              <h2 className="font-semibold text-gray-900">API Key (LLM)</h2>
+              <p className="text-xs text-gray-500">Los agentes usan el proveedor configurado (Claude o DeepSeek)</p>
             </div>
           </div>
           <div className="space-y-4 bg-surface-secondary rounded-2xl p-5 border border-gray-100">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wider">Anthropic API Key</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wider">LLM API Key</label>
               <input
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
                 className="input-field bg-white/50 text-xs font-mono"
-                placeholder="sk-ant-..."
+                placeholder="sk-ant-... o sk-..."
               />
             </div>
             <p className="text-xs text-gray-400 flex items-center gap-1">
               <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="text-agency-600 hover:text-agency-700 font-medium flex items-center gap-0.5">
-                Obtener key en Anthropic Console <ExternalLink className="w-3 h-3" />
+                Claude: Anthropic Console <ExternalLink className="w-3 h-3" />
+              </a>
+              <span className="text-gray-300 mx-1">|</span>
+              <a href="https://platform.deepseek.com" target="_blank" rel="noopener noreferrer" className="text-agency-600 hover:text-agency-700 font-medium flex items-center gap-0.5">
+                DeepSeek: platform.deepseek.com <ExternalLink className="w-3 h-3" />
               </a>
             </p>
           </div>
