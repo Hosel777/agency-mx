@@ -1,7 +1,7 @@
 # CONTEXTO DEL PROYECTO — Agency MX
 
 > Guardar este archivo cada vez que se avance para no perder el hilo si se cuelga o apaga la PC.
-> Última actualización: 5 Junio 2026 — Sesión 5: Deploy pendiente, faltan keys
+> Última actualización: 8 Junio 2026 — Sesión 6: 112 agentes con prompts completos desde msitarzewski/agency-agents
 
 ---
 
@@ -53,16 +53,16 @@ agency-mx/
 │   ├── services/
 │   │   ├── supabase.js            # Cliente Supabase configurado ✅
 │   │   └── api.js                 # CRUD + startOrchestration + sendChatMessage ✅
-│   └── utils/
-│       ├── agents.js              # 41 agentes hardcodeados (vs 112 .md, vs 31 SQL)
-│       ├── constants.js           # Status labels/colors
-│       └── orchestrator-prompts.js # Prompt de orchestrator (ahora en api/lib/agents.js)
+│       └── utils/
+│           ├── agents.js              # 112 agentes hardcodeados ✅
+│           ├── constants.js           # Status labels/colors
+│           └── orchestrator-prompts.js # Prompt de orchestrator (ahora en api/lib/agents.js)
 ├── api/                           # Backend serverless (Vercel Functions)
 │   ├── orchestrate.js             # Orquestación con Claude ✅
 │   ├── chat.js                    # Chat con agentes ✅
-│   └── lib/
-│       ├── anthropic.js           # Helper Claude Sonnet ✅
-│       ├── agents.js              # Prompts + cadenas de agentes ✅
+│       └── lib/
+│           ├── anthropic.js           # Helper Claude Sonnet ✅
+│           ├── agents.js              # 113 prompts de agentes ✅ (15 originales + 91 del repo + 7 manuales)
 │       └── supabase.js            # Cliente admin Supabase ✅
 ├── supabase-schema.sql            # Schema completo + seed + migraciones
 ├── .env                           # Credenciales REALES del usuario
@@ -102,19 +102,19 @@ agency-mx/
 - **api/orchestrate.js**: escribe logs en `orchestration_logs` en cada paso
 - **api/chat.js**: chat con agentes via Claude, historial de 20 mensajes
 - **api/lib/anthropic.js**: helper Claude Sonnet
-- **api/lib/agents.js**: 11 prompts + 7 cadenas de orquestación
+- **api/lib/agents.js**: 113 prompts de agente (15 originales + 91 del repo msitarzewski/agency-agents + 7 manuales) + 12 cadenas de orquestación
 - SQL Storage: instrucciones para bucket agency-files
 
 ### Definiciones de agentes
 - 112 archivos .md completos en `agents/` organizados en 10 departamentos
-- 11 prompts de agente en `api/lib/agents.js` para el backend
+- 113 prompts de agente en `api/lib/agents.js` para el backend (15 originales + 91 convertidos automáticamente desde msitarzewski/agency-agents + 7 manuales)
+- 12 cadenas de orquestación (8 originales + 4 nuevas: sales_outbound, content_marketing, email_campaign, security_audit)
 
 ---
 
 ## LO QUE NO FUNCIONA / ESTÁ INCOMPLETO
 
 ### Por mejorar
-- 112 .md vs 41 en JS vs 41 en SQL — los .md tienen agentes especializados extra
 - Notificaciones en tiempo real (Supabase Realtime)
 - Pruebas automatizadas
 - Timeout de Vercel Hobby (10s puede ser poco para cadenas largas de agentes)
@@ -134,13 +134,15 @@ agency-mx/
 | Agents page desde Supabase | **100%** |
 | Supabase Storage (subida archivos) | **100%** |
 | Definiciones de agentes (.md) | **100%** |
-| Consistencia agentes (.md vs JS vs SQL) | **50%** (41 sincronizados, .md tiene más) |
-| **GLOBAL** | **~90%** |
+| Prompts de agente en backend (api/lib/agents.js) | **100%** (114 prompts: 112 agentes BD + 2 extra) |
+| Cadenas de orquestación | **100%** (12 cadenas: 8 originales + 4 nuevas) |
+| Consistencia agentes (.md vs JS vs SQL vs prompts) | **100%** (112 agentes sincronizados en todos lados) |
+| **GLOBAL** | **~95%** |
 
 ## PENDIENTE
 
 - Revisar timeout Vercel Hobby (10s puede ser poco para cadenas largas de agentes)
-- Unificar 112 .md con los 41 core agents
+- Pruebas automatizadas
 - Pruebas automatizadas
 
 ---
@@ -217,18 +219,20 @@ vercel dev         # Inicia todo localmente (frontend + api)
 ## PRÓXIMA SESIÓN — CONTINUAR DESDE AQUÍ
 
 Lo último completado:
-- ✅ Agents page conectada a Supabase con fallback local
-- ✅ SQL seed actualizado a 41 agentes
+- ✅ **112 agentes sincronizados en todos lados** (.md, SQL, JS frontend, prompts backend)
+- ✅ **114 prompts de agente** en `api/lib/agents.js` (91 del repo msitarzewski/agency-agents + 15 originales + 8 manuales)
+- ✅ **12 cadenas de orquestación** (4 nuevas: sales_outbound, content_marketing, email_campaign, security_audit)
+- ✅ Agents page conectada a Supabase con fallback local (112 agentes)
+- ✅ SQL seed con 112 agentes
 - ✅ Supabase Storage + FileUpload component
 - ✅ DeliverablePreview usa deliverable_type de la BD
 - ✅ Guía de deploy completa en este documento
-- ❌ El proyecto está ~90% listo para producción
+- ❌ El proyecto está ~95% listo para producción
 
 Pasos para la próxima sesión:
-1. Hacer deploy a Vercel siguiendo la guía
-2. Probar que la orquestación funcione
-3. Unificar 112 .md con agentes core (opcional)
-4. Agregar pruebas automatizadas (opcional)
+1. Hacer deploy a Vercel siguiendo la guía (faltan ANTHROPIC_API_KEY y SUPABASE_SERVICE_ROLE_KEY)
+2. Probar que la orquestación funcione con las 12 cadenas
+3. Agregar pruebas automatizadas (opcional)
 
 ---
 
@@ -281,3 +285,14 @@ ANTHROPIC_API_KEY=           <-- obtener de https://console.anthropic.com
 - Frontend: polling cada 3s de logs + entregables mientras orquesta
 - RequestDetail simplificado: solo breadcrumb + AgentWorkspace
 - SQL: columna `orchestration_logs JSONB` en client_requests
+
+### Sesión 6 — 112 agentes con prompts completos (Commit: actual)
+- ✅ **SQL seed actualizado a 112 agentes** (commit 68631d4)
+- ✅ **Frontend agents.js actualizado a 112 agentes** (commit 35405af)
+- ✅ **114 prompts de agente** generados en `api/lib/agents.js`:
+  - 91 convertidos automáticamente desde `msitarzewski/agency-agents`
+  - 15 originales preservados
+  - 8 creados manualmente para agentes sin equivalente en el repo
+- ✅ **12 cadenas de orquestación** (4 nuevas: sales_outbound, content_marketing, email_campaign, security_audit)
+- ✅ **Consistencia 100%**: 112 agentes sincronizados entre .md, SQL, JS frontend y prompts backend
+- ✅ Progreso global: ~90% → ~95%
