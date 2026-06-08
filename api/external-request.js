@@ -57,9 +57,13 @@ export default async function handler(req, res) {
       description,
       project_type: type,
       client_name: client_name || null,
+      client_email: client_email || null,
       budget: budget ? parseFloat(budget) : null,
       deadline: deadline || null,
-      refs: JSON.stringify({ client_email, source, brand_data, images }) || '',
+      source: source || 'socialpulse',
+      brand_data: brand_data || null,
+      images: images || null,
+      refs: refs || '',
       status: 'pending'
     }
 
@@ -70,11 +74,13 @@ export default async function handler(req, res) {
       .single()
 
     if (error) {
-      // Fallback: try without refs JSON
-      delete insertData.refs
+      // Fallback: try without brand_data/images (columnas pueden no existir aún)
+      const fallbackData = { ...insertData }
+      delete fallbackData.brand_data
+      delete fallbackData.images
       const { data: data2, error: error2 } = await supabase
         .from('client_requests')
-        .insert({ title, description, project_type: type, status: 'pending' })
+        .insert(fallbackData)
         .select()
         .single()
       if (error2) {

@@ -82,14 +82,106 @@ function FileTree({ deliverables, activeFile, onSelect, agentMessages }) {
 }
 
 // ─── Editor Panel ────────────────────────────────────────────
-function EditorPanel({ file, onDeliver, onDeploy, deploying }) {
+function EditorPanel({ file, onDeliver, onDeploy, deploying, request }) {
   if (!file) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500 bg-gray-50">
-        <div className="text-center">
-          <Bot className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-          <p>Selecciona un entregable del explorador</p>
+      <div className="flex items-start justify-center h-full text-gray-500 bg-gray-50 overflow-y-auto">
+        <div className="text-center max-w-2xl w-full px-6 py-8">
+          {request ? (
+            <div className="text-left bg-white rounded-xl border shadow-sm p-6 space-y-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">{request.title}</h2>
+                <div className="flex items-center gap-3 text-sm text-gray-500">
+                  {request.project_type && <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">{request.project_type}</span>}
+                  {request.source && <span className="text-xs">{request.source === 'socialpulse' ? '🌐 SocialPulse' : '📋 Manual'}</span>}
+                </div>
+              </div>
+
+              {request.description && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-1 uppercase tracking-wide">Descripción</h3>
+                  <p className="text-gray-600 whitespace-pre-wrap text-sm leading-relaxed">{request.description}</p>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-4 text-sm">
+                {request.budget && <div><span className="text-gray-500">Presupuesto:</span> <span className="font-medium text-gray-800">${request.budget} MXN</span></div>}
+                {request.deadline && <div><span className="text-gray-500">Fecha límite:</span> <span className="font-medium text-gray-800">{request.deadline}</span></div>}
+                {request.client_name && <div><span className="text-gray-500">Cliente:</span> <span className="font-medium text-gray-800">{request.client_name}</span></div>}
+                {request.client_email && <div><span className="text-gray-500">Email:</span> <span className="font-medium text-gray-800">{request.client_email}</span></div>}
+              </div>
+
+              {request.refs && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-1 uppercase tracking-wide">Referencias</h3>
+                  <p className="text-gray-600 whitespace-pre-wrap text-sm">{request.refs}</p>
+                </div>
+              )}
+
+              {request.brand_data && renderBrandData(request.brand_data)}
+
+              {request.images && request.images.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">Imágenes</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {request.images.map((img, i) => (
+                      <div key={i} className="relative group rounded-lg overflow-hidden border bg-gray-50">
+                        <img src={img.url || img} alt={img.label || `Imagen ${i + 1}`} className="w-full h-32 object-cover" />
+                        {img.label && <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-2"><p className="text-xs text-white truncate">{img.label}</p></div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2 text-center text-xs text-gray-400">
+                {request.status === 'pending' ? 'Usa "Generar Presupuesto" para iniciar' :
+                 request.status === 'quoting' ? 'Generando presupuesto...' :
+                 request.status === 'quote_sent' ? 'Presupuesto listo — ejecutá los agentes' :
+                 'Entregables disponibles abajo en el explorador'}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <Bot className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+              <p>Selecciona un entregable del explorador</p>
+            </div>
+          )}
         </div>
+      </div>
+    )
+  }
+
+  function renderBrandData(bd) {
+    const rows = []
+    if (bd.business_name) rows.push(['Negocio', bd.business_name])
+    if (bd.industry) rows.push(['Industria', bd.industry])
+    if (bd.audience) rows.push(['Audiencia', bd.audience])
+    if (bd.tone) rows.push(['Tono', bd.tone])
+    if (bd.style) rows.push(['Estilo', bd.style])
+    if (bd.colors) {
+      const colors = Array.isArray(bd.colors) ? bd.colors : typeof bd.colors === 'string' ? bd.colors.split(/[,;]/).map(s => s.trim()).filter(Boolean) : []
+      rows.push(['Colores', colors.map(c => <span key={c} className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full inline-block border" style={{backgroundColor: c}} />{c}</span>)])
+    }
+    if (bd.description) rows.push(['Descripción', bd.description])
+    if (rows.length === 0) return null
+    return (
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">Datos de Marca</h3>
+        <div className="bg-gray-50 rounded-lg border p-4 space-y-2">
+          {rows.map(([label, value], i) => (
+            <div key={i} className="flex gap-2 text-sm">
+              <span className="text-gray-500 font-medium min-w-[80px]">{label}:</span>
+              <span className="text-gray-800">{value}</span>
+            </div>
+          ))}
+        </div>
+        {bd.logo && (
+          <div className="mt-3">
+            <p className="text-sm text-gray-500 font-medium mb-1">Logo:</p>
+            <img src={bd.logo} alt="Logo" className="max-h-20 rounded border bg-white p-1" />
+          </div>
+        )}
       </div>
     )
   }
@@ -439,7 +531,7 @@ export default function AgentWorkspace({ request }) {
           {/* Panel content */}
           <div className="flex-1 overflow-hidden">
             {activePanel === 'editor' ? (
-              <EditorPanel file={activeFile} onDeliver={handleDeliver} onDeploy={handleDeployWebsite} deploying={deploying} />
+              <EditorPanel file={activeFile} onDeliver={handleDeliver} onDeploy={handleDeployWebsite} deploying={deploying} request={request} />
             ) : (
               <LiveTerminal logs={logs} />
             )}
