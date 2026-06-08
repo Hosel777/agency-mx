@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../services/supabase'
 import { fetchRequest, fetchDeliverables, fetchAgentMessages, startOrchestration, sendChatMessage, deployWebsite, generateQuote, sendQuote } from '../../services/api'
 import { STATUS_LABELS, STATUS_COLORS } from '../../utils/constants'
+import OrchestrationTimeline from './OrchestrationTimeline'
 import {
   Bot, FileText, Globe, Image as ImageIcon, Code2, Download,
   ChevronRight, ChevronDown, Play, Square, Loader2,
@@ -294,30 +295,6 @@ function EditorPanel({ file, onDeliver, onDeploy, deploying, request, onSaveQuot
           renderPreview()
         )}
       </div>
-    </div>
-  )
-}
-
-// ─── Live Terminal ───────────────────────────────────────────
-function LiveTerminal({ logs }) {
-  const bottomRef = useRef(null)
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [logs])
-
-  return (
-    <div className="h-full bg-gray-950 text-green-400 font-mono text-xs p-3 overflow-auto">
-      {logs.map((log, i) => (
-        <div key={i} className="flex gap-2">
-          <span className="text-gray-600 shrink-0">{log.time}</span>
-          <span className={`shrink-0 ${log.level === 'error' ? 'text-red-400' : log.level === 'warn' ? 'text-yellow-400' : 'text-cyan-400'}`}>
-            [{log.agent}]
-          </span>
-          <span className="text-gray-300">{log.text}</span>
-        </div>
-      ))}
-      {logs.length === 0 && (
-        <div className="text-gray-600">Esperando actividad de los agentes...</div>
-      )}
-      <div ref={bottomRef} />
     </div>
   )
 }
@@ -637,7 +614,7 @@ export default function AgentWorkspace({ request }) {
             {activePanel === 'editor' ? (
               <EditorPanel file={activeFile} onDeliver={handleDeliver} onDeploy={handleDeployWebsite} deploying={deploying} request={reqData} onSaveQuote={handleSaveQuote} saving={saving} editContent={editContent} setEditContent={setEditContent} editStripeLink={editStripeLink} setEditStripeLink={setEditStripeLink} />
             ) : (
-              <LiveTerminal logs={logs} />
+              <OrchestrationTimeline logs={logs} />
             )}
           </div>
         </div>

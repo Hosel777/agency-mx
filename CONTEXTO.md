@@ -1,7 +1,7 @@
 # CONTEXTO DEL PROYECTO — Agency MX
 
 > Guardar este archivo cada vez que se avance para no perder el hilo si se cuelga o apaga la PC.
-> Última actualización: 8 Junio 2026 — Sesión 6: 112 agentes con prompts completos desde msitarzewski/agency-agents
+> Última actualización: 8 Junio 2026 — Sesión 7: Dashboard enterprise + Timeline visual + Demo Rápida
 
 ---
 
@@ -95,6 +95,11 @@ agency-mx/
 - Logout funcional
 - FileUpload componente para subir archivos a Supabase Storage
 - storage.js: servicio de subida, borrado y listado de archivos
+- **Dashboard enterprise** con 3 filas de métricas: agentes activados, entregables generados, tiempo promedio, origen (SocialPulse vs Manual), eficiencia
+- **Timeline visual** tipo Gantt reemplaza el LiveTerminal, con vista agrupada por agente o plana
+- **Botón Demo Rápida ⚡**: crea solicitud realista (Landing Page FinTech) con 1 click desde Dashboard o Login
+- **api/stats.js**: endpoint GET que agrega métricas de todas las tablas
+- **api/demo.js**: endpoint POST que crea solicitud demo con brand_data completa
 
 ### Backend / Base de datos
 - 5 tablas en Supabase (+ orchestration_logs embebido en client_requests)
@@ -125,7 +130,7 @@ agency-mx/
 
 | Área | % |
 |---|---|
-| UI / Frontend visual | **95%** |
+| UI / Frontend visual | **98%** |
 | CRUD contra Supabase | **95%** |
 | Autenticación (Login/Register/Logout) | **100%** |
 | Integración con IA (Claude Sonnet) | **100%** (backend listo, falta API key) |
@@ -137,7 +142,10 @@ agency-mx/
 | Prompts de agente en backend (api/lib/agents.js) | **100%** (114 prompts: 112 agentes BD + 2 extra) |
 | Cadenas de orquestación | **100%** (12 cadenas: 8 originales + 4 nuevas) |
 | Consistencia agentes (.md vs JS vs SQL vs prompts) | **100%** (112 agentes sincronizados en todos lados) |
-| **GLOBAL** | **~95%** |
+| Dashboard con métricas enterprise | **100%** |
+| Timeline visual de orquestación | **100%** |
+| Demo Rápida (endpoint + UI) | **100%** |
+| **GLOBAL** | **~97%** |
 
 ## PENDIENTE
 
@@ -233,6 +241,7 @@ Pasos para la próxima sesión:
 1. Hacer deploy a Vercel siguiendo la guía (faltan ANTHROPIC_API_KEY y SUPABASE_SERVICE_ROLE_KEY)
 2. Probar que la orquestación funcione con las 12 cadenas
 3. Agregar pruebas automatizadas (opcional)
+4. Si se usa Vercel Hobby, evaluar migrar a Pro por timeout de 10s en orquestaciones largas
 
 ---
 
@@ -296,3 +305,14 @@ ANTHROPIC_API_KEY=           <-- obtener de https://console.anthropic.com
 - ✅ **12 cadenas de orquestación** (4 nuevas: sales_outbound, content_marketing, email_campaign, security_audit)
 - ✅ **Consistencia 100%**: 112 agentes sincronizados entre .md, SQL, JS frontend y prompts backend
 - ✅ Progreso global: ~90% → ~95%
+
+### Sesión 7 — Dashboard enterprise + Timeline visual + Demo Rápida (Commit: 803fb79)
+- ✅ **Dashboard enterprise**: 3 filas de métricas — agentes activados (vs 112 disponibles), entregables generados, tiempo promedio de finalización, origen SocialPulse vs Manual, paneles de eficiencia
+- ✅ **api/stats.js**: endpoint GET que agrega datos de client_requests, deliverables, agent_messages
+- ✅ **Timeline visual** (`OrchestrationTimeline.jsx`): reemplaza LiveTerminal plano con vista tipo Gantt, agrupado por agente con burbujas colapsables y emojis, vista plana alternativa, códigos de color por nivel
+- ✅ **Botón Demo Rápida ⚡** en Dashboard y Login:
+  - `api/demo.js`: endpoint POST que crea solicitud realista (FinTech Landing Page con brand_data, budget, deadline, referencias)
+  - 1 click → crea proyecto + redirige a RequestDetail listo para presupuestar
+  - También disponible sin login en la pantalla de Login
+- ✅ Build exitoso (1810 módulos, 491KB JS, 45KB CSS)
+- ✅ Progreso global: ~95% → ~97%

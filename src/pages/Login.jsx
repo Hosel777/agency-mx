@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabase'
+import { createDemoRequest } from '../services/api'
 import toast from 'react-hot-toast'
-import { Sparkles, Loader2, Mail, Lock } from 'lucide-react'
+import { Sparkles, Loader2, Mail, Lock, Zap } from 'lucide-react'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -115,6 +116,22 @@ export default function Login() {
               </button>
             </p>
           </form>
+
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <button
+              onClick={async () => {
+                const result = await createDemoRequest()
+                if (result.success) {
+                  toast.success('Demo creada — iniciá sesión para verla')
+                  navigator.clipboard?.writeText(result.requestId)
+                }
+              }}
+              className="w-full py-2.5 rounded-xl font-semibold text-sm text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/10 transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <Zap className="w-4 h-4" />
+              Demo Rápida ⚡ (sin registro)
+            </button>
+          </div>
         </div>
       </div>
     </div>

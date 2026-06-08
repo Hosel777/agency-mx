@@ -103,3 +103,16 @@ export async function deployWebsite(deliverableId, requestId, content, title) {
   })
   return response.json()
 }
+
+export async function fetchDashboardStats() {
+  const response = await fetch('/api/stats')
+  return response.json()
+}
+
+export async function createDemoRequest() {
+  const response = await fetch('/api/demo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  return response.json()
+}
