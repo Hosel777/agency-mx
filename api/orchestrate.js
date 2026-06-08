@@ -51,15 +51,23 @@ async function handleQuoteMode(requestId, apiKey, res) {
       return res.status(404).json({ error: 'Request not found' })
     }
 
-    await supabase
-      .from('client_requests')
-      .update({ status: 'quoting' })
-      .eq('id', requestId)
+    const sbUpdate = async (table, data, eqCol, eqVal) => {
+      const { error } = await supabase.from(table).update(data).eq(eqCol, eqVal)
+      if (error) console.error(`Supabase update error (${table}):`, error)
+      return error
+    }
+    const sbInsert = async (table, data) => {
+      const { error } = await supabase.from(table).insert(data)
+      if (error) console.error(`Supabase insert error (${table}):`, error)
+      return error
+    }
+
+    await sbUpdate('client_requests', { status: 'quoting' }, 'id', requestId)
 
     // Paso 1: Ejecutar el Orquestador para generar el plan
     const orcResult = await runOrchestrator(requestId, request, apiKey)
 
-    await supabase.from('agent_messages').insert({
+    await sbInsert('agent_messages', {
       request_id: requestId,
       agent_name: 'Agents Orchestrator',
       agent_id: 'agents-orchestrator',
@@ -75,10 +83,7 @@ async function handleQuoteMode(requestId, apiKey, res) {
       entregables_esperados: orcResult.plan?.entregables_esperados || []
     }
 
-    await supabase
-      .from('client_requests')
-      .update({ orchestration_plan: planData })
-      .eq('id', requestId)
+    await sbUpdate('client_requests', { orchestration_plan: planData }, 'id', requestId)
 
     // Paso 2: Ejecutar el Sales Agent con el plan ya definido
     const salesAgent = AGENT_PROMPTS['sales']
@@ -106,7 +111,7 @@ Basado en estos agentes/servicios, genera un presupuesto detallado con:
 
     const quote = await callLLM(salesAgent.systemPrompt, [{ role: 'user', content: salesMsg }], apiKey)
 
-    await supabase.from('agent_messages').insert({
+    await sbInsert('agent_messages', {
       request_id: requestId,
       agent_name: 'Sales',
       agent_id: 'sales',
@@ -114,7 +119,7 @@ Basado en estos agentes/servicios, genera un presupuesto detallado con:
       content: quote
     })
 
-    await supabase.from('deliverables').insert({
+    await sbInsert('deliverables', {
       request_id: requestId,
       agent_id: 'sales',
       agent_name: 'Sales',
@@ -125,10 +130,11 @@ Basado en estos agentes/servicios, genera un presupuesto detallado con:
       status: 'completed'
     })
 
-    await supabase
-      .from('client_requests')
-      .update({ status: 'quote_sent', quote_sent_at: new Date().toISOString() })
-      .eq('id', requestId)
+    const finalErr = await sbUpdate('client_requests', { status: 'quote_sent', quote_sent_at: new Date().toISOString() }, 'id', requestId)
+    if (finalErr) {
+      console.error('CRITICAL: status update failed — check SUPABASE_SERVICE_ROLE_KEY in Vercel')
+      return res.status(200).json({ success: true, mode: 'quote', requestId, plan: planData, quote, warning: 'Status no actualizado en DB — verificar clave' })
+    }
 
     return res.status(200).json({
       success: true,
