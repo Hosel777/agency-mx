@@ -120,7 +120,7 @@ function EditorPanel({ file, onDeliver, onDeploy, deploying, request }) {
 
               {request.brand_data && renderBrandData(request.brand_data)}
 
-              {request.images && request.images.length > 0 && (
+              {Array.isArray(request.images) && request.images.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">Imágenes</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -313,10 +313,11 @@ export default function AgentWorkspace({ request }) {
   const [reqData, setReqData] = useState(request)
 
   const loadData = async () => {
+    const safeFetch = (fn) => fn().catch(() => ({ data: null }))
     const [delRes, msgRes, reqRes] = await Promise.all([
-      fetchDeliverables(reqData.id),
-      fetchAgentMessages(reqData.id),
-      fetchRequest(reqData.id),
+      safeFetch(() => fetchDeliverables(reqData.id)),
+      safeFetch(() => fetchAgentMessages(reqData.id)),
+      safeFetch(() => fetchRequest(reqData.id)),
     ])
     if (delRes.data) setDeliverables(delRes.data)
     if (msgRes.data) setMessages(msgRes.data)
@@ -355,6 +356,7 @@ export default function AgentWorkspace({ request }) {
       const result = await generateQuote(reqData.id)
       if (result.success) {
         addLog('Sales', 'Presupuesto generado exitosamente')
+        setReqData(prev => ({ ...prev, status: 'quote_sent' }))
         await loadData()
       } else {
         addLog('Sistema', `Error: ${result.error}`, 'error')
@@ -375,6 +377,7 @@ export default function AgentWorkspace({ request }) {
       const result = await startOrchestration(reqData.id)
       if (result.success) {
         addLog('Agents Orchestrator', `Plan ejecutado: ${result.agentsActivated} agentes activados, ${result.deliverablesGenerated} entregables generados`)
+        setReqData(prev => ({ ...prev, status: 'in_progress' }))
         await loadData()
       } else {
         addLog('Sistema', `Error: ${result.error}`, 'error')

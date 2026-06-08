@@ -120,7 +120,7 @@ CREATE POLICY "users_see_own_agent_messages" ON public.agent_messages
     FOR SELECT USING (
         EXISTS (
             SELECT 1 FROM public.client_requests
-            WHERE id = agent_messages.request_id AND user_id = auth.uid()
+            WHERE id = agent_messages.request_id AND (user_id = auth.uid() OR user_id IS NULL)
         )
     );
 
@@ -130,7 +130,7 @@ CREATE POLICY "users_see_own_deliverables" ON public.deliverables
     FOR SELECT USING (
         EXISTS (
             SELECT 1 FROM public.client_requests
-            WHERE id = deliverables.request_id AND user_id = auth.uid()
+            WHERE id = deliverables.request_id AND (user_id = auth.uid() OR user_id IS NULL)
         )
     );
 
