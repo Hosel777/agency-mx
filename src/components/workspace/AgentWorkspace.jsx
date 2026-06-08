@@ -90,41 +90,41 @@ function EditorPanel({ file, onDeliver, onDeploy, deploying, request }) {
           {request ? (
             <div className="text-left bg-white rounded-xl border shadow-sm p-6 space-y-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-1">{request.title}</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">{reqData.title}</h2>
                 <div className="flex items-center gap-3 text-sm text-gray-500">
-                  {request.project_type && <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">{request.project_type}</span>}
-                  {request.source && <span className="text-xs">{request.source === 'socialpulse' ? '🌐 SocialPulse' : '📋 Manual'}</span>}
+                  {reqData.project_type && <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">{reqData.project_type}</span>}
+                  {reqData.source && <span className="text-xs">{reqData.source === 'socialpulse' ? '🌐 SocialPulse' : '📋 Manual'}</span>}
                 </div>
               </div>
 
-              {request.description && (
+              {reqData.description && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-1 uppercase tracking-wide">Descripción</h3>
-                  <p className="text-gray-600 whitespace-pre-wrap text-sm leading-relaxed">{request.description}</p>
+                  <p className="text-gray-600 whitespace-pre-wrap text-sm leading-relaxed">{reqData.description}</p>
                 </div>
               )}
 
               <div className="flex flex-wrap gap-4 text-sm">
-                {request.budget && <div><span className="text-gray-500">Presupuesto:</span> <span className="font-medium text-gray-800">${request.budget} MXN</span></div>}
-                {request.deadline && <div><span className="text-gray-500">Fecha límite:</span> <span className="font-medium text-gray-800">{request.deadline}</span></div>}
-                {request.client_name && <div><span className="text-gray-500">Cliente:</span> <span className="font-medium text-gray-800">{request.client_name}</span></div>}
-                {request.client_email && <div><span className="text-gray-500">Email:</span> <span className="font-medium text-gray-800">{request.client_email}</span></div>}
+                {reqData.budget && <div><span className="text-gray-500">Presupuesto:</span> <span className="font-medium text-gray-800">${reqData.budget} MXN</span></div>}
+                {reqData.deadline && <div><span className="text-gray-500">Fecha límite:</span> <span className="font-medium text-gray-800">{reqData.deadline}</span></div>}
+                {reqData.client_name && <div><span className="text-gray-500">Cliente:</span> <span className="font-medium text-gray-800">{reqData.client_name}</span></div>}
+                {reqData.client_email && <div><span className="text-gray-500">Email:</span> <span className="font-medium text-gray-800">{reqData.client_email}</span></div>}
               </div>
 
-              {request.refs && (
+              {reqData.refs && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-1 uppercase tracking-wide">Referencias</h3>
-                  <p className="text-gray-600 whitespace-pre-wrap text-sm">{request.refs}</p>
+                  <p className="text-gray-600 whitespace-pre-wrap text-sm">{reqData.refs}</p>
                 </div>
               )}
 
-              {request.brand_data && renderBrandData(request.brand_data)}
+              {reqData.brand_data && renderBrandData(reqData.brand_data)}
 
-              {request.images && request.images.length > 0 && (
+              {reqData.images && reqData.images.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">Imágenes</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {request.images.map((img, i) => (
+                    {reqData.images.map((img, i) => (
                       <div key={i} className="relative group rounded-lg overflow-hidden border bg-gray-50">
                         <img src={img.url || img} alt={img.label || `Imagen ${i + 1}`} className="w-full h-32 object-cover" />
                         {img.label && <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-2"><p className="text-xs text-white truncate">{img.label}</p></div>}
@@ -135,9 +135,9 @@ function EditorPanel({ file, onDeliver, onDeploy, deploying, request }) {
               )}
 
               <div className="pt-2 text-center text-xs text-gray-400">
-                {request.status === 'pending' ? 'Usa "Generar Presupuesto" para iniciar' :
-                 request.status === 'quoting' ? 'Generando presupuesto...' :
-                 request.status === 'quote_sent' ? 'Presupuesto listo — ejecutá los agentes' :
+                {reqData.status === 'pending' ? 'Usa "Generar Presupuesto" para iniciar' :
+                 reqData.status === 'quoting' ? 'Generando presupuesto...' :
+                 reqData.status === 'quote_sent' ? 'Presupuesto listo — ejecutá los agentes' :
                  'Entregables disponibles abajo en el explorador'}
               </div>
             </div>
@@ -310,15 +310,17 @@ export default function AgentWorkspace({ request }) {
   const [deploying, setDeploying] = useState(false)
   const [chatMsg, setChatMsg] = useState('')
   const [chatSending, setChatSending] = useState(false)
+  const [reqData, setReqData] = useState(request)
 
   const loadData = async () => {
     const [delRes, msgRes, reqRes] = await Promise.all([
-      fetchDeliverables(request.id),
-      fetchAgentMessages(request.id),
-      fetchRequest(request.id),
+      fetchDeliverables(reqData.id),
+      fetchAgentMessages(reqData.id),
+      fetchRequest(reqData.id),
     ])
     if (delRes.data) setDeliverables(delRes.data)
     if (msgRes.data) setMessages(msgRes.data)
+    if (reqRes.data) setReqData(reqRes.data)
     if (reqRes.data?.orchestration_logs) {
       const storedLogs = reqRes.data.orchestration_logs.map(l => ({
         time: new Date(l.time).toLocaleTimeString(),
@@ -330,14 +332,14 @@ export default function AgentWorkspace({ request }) {
     }
   }
 
-  useEffect(() => { if (request?.id) loadData() }, [request?.id])
+  useEffect(() => { if (request?.id) { setReqData(request); loadData() } }, [request?.id])
 
   // Live polling cada 3s si está en progreso
   useEffect(() => {
-    if (!request?.id || request.status !== 'in_progress') return
+    if (!request?.id || reqData.status !== 'in_progress') return
     const interval = setInterval(loadData, 3000)
     return () => clearInterval(interval)
-  }, [request?.id, request?.status])
+  }, [request?.id, reqData.status])
 
   const addLog = (agent, text, level = 'info') => {
     const time = new Date().toLocaleTimeString()
@@ -350,7 +352,7 @@ export default function AgentWorkspace({ request }) {
     addLog('Agents Orchestrator', 'Analizando solicitud para plan de ejecución...')
 
     try {
-      const result = await generateQuote(request.id)
+      const result = await generateQuote(reqData.id)
       if (result.success) {
         addLog('Sales', 'Presupuesto generado exitosamente')
         await loadData()
@@ -370,7 +372,7 @@ export default function AgentWorkspace({ request }) {
     addLog('Agents Orchestrator', 'Analizando solicitud...')
 
     try {
-      const result = await startOrchestration(request.id)
+      const result = await startOrchestration(reqData.id)
       if (result.success) {
         addLog('Agents Orchestrator', `Plan ejecutado: ${result.agentsActivated} agentes activados, ${result.deliverablesGenerated} entregables generados`)
         await loadData()
@@ -405,7 +407,7 @@ export default function AgentWorkspace({ request }) {
     addLog('Sistema', `Publicando sitio web...`, 'info')
 
     try {
-      const result = await deployWebsite(file.id, request.id, file.content, file.name)
+      const result = await deployWebsite(file.id, reqData.id, file.content, file.name)
       if (result.success) {
         addLog('Sistema', `¡Sitio web publicado! 🌐 ${result.url}`, 'info')
         setDeliverables(prev => prev.map(d =>
@@ -433,7 +435,7 @@ export default function AgentWorkspace({ request }) {
     setMessages(prev => [...prev, userMsg])
 
     try {
-      const result = await sendChatMessage(request.id, text)
+      const result = await sendChatMessage(reqData.id, text)
       if (result.success) {
         const agentMsg = { id: `temp-${Date.now() + 1}`, agent_name: result.agent, role: 'assistant', content: result.response, created_at: new Date().toISOString() }
         setMessages(prev => [...prev, agentMsg])
@@ -454,15 +456,15 @@ export default function AgentWorkspace({ request }) {
             <Sparkles className="w-4.5 h-4.5 text-white" />
           </div>
           <div>
-            <span className="font-semibold text-gray-900">{request.title}</span>
+            <span className="font-semibold text-gray-900">{reqData.title}</span>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className={STATUS_COLORS[request.status]}>{STATUS_LABELS[request.status]}</span>
-              <span className="text-xs text-gray-400">{request.project_type}</span>
+              <span className={STATUS_COLORS[reqData.status]}>{STATUS_LABELS[reqData.status]}</span>
+              <span className="text-xs text-gray-400">{reqData.project_type}</span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {request.status === 'pending' && (
+          {reqData.status === 'pending' && (
             <button
               onClick={handleGenerateQuote}
               disabled={quoting}
@@ -472,12 +474,12 @@ export default function AgentWorkspace({ request }) {
               {quoting ? 'Generando presupuesto...' : 'Generar Presupuesto'}
             </button>
           )}
-          {request.status === 'quoting' && (
+          {reqData.status === 'quoting' && (
             <span className="flex items-center gap-1.5 text-xs font-medium text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Generando presupuesto...
             </span>
           )}
-          {request.status === 'quote_sent' && (
+          {reqData.status === 'quote_sent' && (
             <button
               onClick={handleOrchestrate}
               disabled={orchestrating}
@@ -487,12 +489,12 @@ export default function AgentWorkspace({ request }) {
               {orchestrating ? 'Orquestando...' : 'Ejecutar Agentes'}
             </button>
           )}
-          {request.status === 'in_progress' && (
+          {reqData.status === 'in_progress' && (
             <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Agentes trabajando...
             </span>
           )}
-          {request.status === 'completed' && (
+          {reqData.status === 'completed' && (
             <span className="badge-green">Completado</span>
           )}
         </div>
