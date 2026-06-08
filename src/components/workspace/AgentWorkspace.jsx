@@ -5,7 +5,7 @@ import { STATUS_LABELS, STATUS_COLORS } from '../../utils/constants'
 import {
   Bot, FileText, Globe, Image as ImageIcon, Code2, Download,
   ChevronRight, ChevronDown, Play, Square, Loader2,
-  MessageSquare, Terminal as TerminalIcon, X, Send, Sparkles
+  MessageSquare, Terminal as TerminalIcon, X, Send, Sparkles, RefreshCw
 } from 'lucide-react'
 
 const TYPE_ICONS = { text: FileText, html: Globe, image: ImageIcon, code: Code2, file: Download }
@@ -82,7 +82,7 @@ function FileTree({ deliverables, activeFile, onSelect, agentMessages }) {
 }
 
 // ─── Editor Panel ────────────────────────────────────────────
-function EditorPanel({ file, onDeliver, onDeploy, deploying, request }) {
+function EditorPanel({ file, onDeliver, onDeploy, deploying, request, onSaveQuote, saving, editContent, setEditContent, editStripeLink, setEditStripeLink }) {
   if (!file) {
     return (
       <div className="flex items-start justify-center h-full text-gray-500 bg-gray-50 overflow-y-auto">
@@ -267,7 +267,32 @@ function EditorPanel({ file, onDeliver, onDeploy, deploying, request }) {
         </div>
       </div>
       <div className="flex-1 overflow-auto p-4">
-        {renderPreview()}
+        {file.agent_id === 'sales' ? (
+          <div className="h-full flex flex-col">
+            <textarea
+              value={editContent}
+              onChange={e => setEditContent(e.target.value)}
+              className="w-full flex-1 font-mono text-sm p-4 border rounded resize-none mb-4 min-h-[300px]"
+            />
+            <div className="mb-4">
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Link de pago Stripe:</label>
+              <input
+                value={editStripeLink}
+                onChange={e => setEditStripeLink(e.target.value)}
+                className="w-full text-sm border rounded px-3 py-2"
+                placeholder="https://buy.stripe.com/..."
+              />
+            </div>
+            <div className="flex justify-end">
+              <button onClick={onSaveQuote} disabled={saving} className="btn-primary text-xs px-4 py-2">
+                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1" />}
+                {saving ? 'Guardando...' : 'Guardar Presupuesto'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          renderPreview()
+        )}
       </div>
     </div>
   )
@@ -311,6 +336,16 @@ export default function AgentWorkspace({ request }) {
   const [chatMsg, setChatMsg] = useState('')
   const [chatSending, setChatSending] = useState(false)
   const [reqData, setReqData] = useState(request)
+  const [editContent, setEditContent] = useState('')
+  const [editStripeLink, setEditStripeLink] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (activeFile?.agent_id === 'sales') {
+      setEditContent(activeFile.content || '')
+      setEditStripeLink(reqData.stripe_payment_link || '')
+    }
+  }, [activeFile?.id])
 
   const loadData = async () => {
     const safeFetch = (fn) => fn().catch(() => ({ data: null }))
@@ -450,6 +485,35 @@ export default function AgentWorkspace({ request }) {
     setChatSending(false)
   }
 
+  const handleSaveQuote = async () => {
+    if (!activeFile || saving) return
+    setSaving(true)
+    try {
+      const { error: delErr } = await supabase
+        .from('deliverables')
+        .update({ content: editContent })
+        .eq('id', activeFile.id)
+      if (delErr) throw delErr
+
+      const { error: reqErr } = await supabase
+        .from('client_requests')
+        .update({ stripe_payment_link: editStripeLink })
+        .eq('id', reqData.id)
+      if (reqErr) throw reqErr
+
+      addLog('Sistema', 'Presupuesto guardado correctamente')
+      await loadData()
+    } catch (err) {
+      addLog('Sistema', `Error al guardar: ${err.message}`, 'error')
+    }
+    setSaving(false)
+  }
+
+  const QUOTE_EXPIRY_DAYS = 30
+  const isQuoteExpired = reqData.status === 'quote_sent' && reqData.quote_sent_at
+    ? Date.now() - new Date(reqData.quote_sent_at).getTime() > QUOTE_EXPIRY_DAYS * 24 * 60 * 60 * 1000
+    : false
+
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col rounded-lg overflow-hidden border">
       {/* Top bar */}
@@ -482,7 +546,7 @@ export default function AgentWorkspace({ request }) {
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Generando presupuesto...
             </span>
           )}
-          {reqData.status === 'quote_sent' && (
+          {reqData.status === 'quote_sent' && !isQuoteExpired && (
             <button
               onClick={handleOrchestrate}
               disabled={orchestrating}
@@ -490,6 +554,16 @@ export default function AgentWorkspace({ request }) {
             >
               {orchestrating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               {orchestrating ? 'Orquestando...' : 'Ejecutar Agentes'}
+            </button>
+          )}
+          {reqData.status === 'quote_sent' && isQuoteExpired && (
+            <button
+              onClick={handleGenerateQuote}
+              disabled={quoting}
+              className="btn-primary text-xs px-4 py-2"
+            >
+              {quoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              {quoting ? 'Generando nuevo presupuesto...' : 'Presupuesto vencido — Renovar'}
             </button>
           )}
           {reqData.status === 'in_progress' && (
@@ -536,7 +610,7 @@ export default function AgentWorkspace({ request }) {
           {/* Panel content */}
           <div className="flex-1 overflow-hidden">
             {activePanel === 'editor' ? (
-              <EditorPanel file={activeFile} onDeliver={handleDeliver} onDeploy={handleDeployWebsite} deploying={deploying} request={reqData} />
+              <EditorPanel file={activeFile} onDeliver={handleDeliver} onDeploy={handleDeployWebsite} deploying={deploying} request={reqData} onSaveQuote={handleSaveQuote} saving={saving} editContent={editContent} setEditContent={setEditContent} editStripeLink={editStripeLink} setEditStripeLink={setEditStripeLink} />
             ) : (
               <LiveTerminal logs={logs} />
             )}

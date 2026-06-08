@@ -32,6 +32,8 @@ ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS brand_data JSONB DEF
 ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS images JSONB DEFAULT NULL;
 ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS client_email TEXT;
 ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'manual';
+ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS quote_sent_at TIMESTAMPTZ DEFAULT NULL;
+ALTER TABLE public.client_requests ADD COLUMN IF NOT EXISTS stripe_payment_link TEXT DEFAULT NULL;
 
 -- Tabla de mensajes de agentes
 CREATE TABLE IF NOT EXISTS public.agent_messages (

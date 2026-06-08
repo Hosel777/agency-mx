@@ -127,7 +127,7 @@ Basado en estos agentes/servicios, genera un presupuesto detallado con:
 
     await supabase
       .from('client_requests')
-      .update({ status: 'quote_sent' })
+      .update({ status: 'quote_sent', quote_sent_at: new Date().toISOString() })
       .eq('id', requestId)
 
     return res.status(200).json({
