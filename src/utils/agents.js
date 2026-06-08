@@ -88,6 +88,25 @@ const AGENTS_HIERARCHY = {
       ],
     },
     {
+      id: 'specialized',
+      name: 'Especializados',
+      level: 5,
+      agents: [
+        { id: 'autonomous-optimization-architect', name: 'Autonomous Optimization Architect', role: 'Optimización de LLMs' },
+        { id: 'cultural-intelligence-strategist', name: 'Cultural Intelligence Strategist', role: 'UX global' },
+        { id: 'data-consolidation-agent', name: 'Data Consolidation Agent', role: 'Consolidación de datos' },
+        { id: 'developer-advocate', name: 'Developer Advocate', role: 'Comunidad dev' },
+        { id: 'identity-graph-operator', name: 'Identity Graph Operator', role: 'Resolución de identidad' },
+        { id: 'incident-response-commander', name: 'Incident Response Commander', role: 'Manejo de incidentes' },
+        { id: 'lsp-index-engineer', name: 'LSP/Index Engineer', role: 'Code intelligence' },
+        { id: 'mcp-builder', name: 'MCP Builder', role: 'Servidores MCP' },
+        { id: 'model-qa-specialist', name: 'Model QA Specialist', role: 'Auditoría de modelos' },
+        { id: 'report-distribution-agent', name: 'Report Distribution Agent', role: 'Distribución de reportes' },
+        { id: 'sales-data-extraction-agent', name: 'Sales Data Extraction Agent', role: 'Extracción datos ventas' },
+        { id: 'zk-steward', name: 'ZK Steward', role: 'Gestión de conocimiento' },
+      ],
+    },
+    {
       id: 'ingenieria',
       name: 'Ingeniería',
       level: 6,
@@ -172,5 +191,7 @@ const AGENTS_HIERARCHY = {
     },
   ],
 }
+
+AGENTS_HIERARCHY.totalAgentes = 1 + AGENTS_HIERARCHY.departments.reduce((sum, dept) => sum + dept.agents.length, 0)
 
 export default AGENTS_HIERARCHY

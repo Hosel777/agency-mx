@@ -3,6 +3,7 @@ import {
   LayoutDashboard, PlusCircle, Bot,
   CheckCircle2, Settings, Sparkles
 } from 'lucide-react'
+import AGENTS_HIERARCHY from '../../utils/agents'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -60,7 +61,7 @@ export default function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-gray-400 truncate">v2.0 — IA Agency</p>
-            <p className="text-[10px] text-gray-600">42 agentes activos</p>
+            <p className="text-[10px] text-gray-600">{AGENTS_HIERARCHY.totalAgentes} agentes activos</p>
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import {
   FileText
 } from 'lucide-react'
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/constants'
+import AGENTS_HIERARCHY from '../utils/agents'
 
 function StatCard({ label, value, icon: Icon, color, bg, gradient }) {
   return (
@@ -151,7 +152,7 @@ export default function Dashboard() {
                 </div>
                 <h3 className="font-semibold text-gray-900">Agentes Disponibles</h3>
               </div>
-              <p className="text-sm text-gray-500">41 agentes de IA listos para trabajar en tu próximo proyecto</p>
+              <p className="text-sm text-gray-500">{AGENTS_HIERARCHY.totalAgentes} agentes de IA listos para trabajar en tu próximo proyecto</p>
             </div>
           </div>
         </>
