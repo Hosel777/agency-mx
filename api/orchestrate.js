@@ -130,7 +130,7 @@ Basado en estos agentes/servicios, genera un presupuesto detallado con:
       status: 'completed'
     })
 
-    const finalErr = await sbUpdate('client_requests', { status: 'quote_sent', quote_sent_at: new Date().toISOString() }, 'id', requestId)
+    const finalErr = await sbUpdate('client_requests', { status: 'quote_sent' }, 'id', requestId)
     if (finalErr) {
       console.error('CRITICAL: status update failed — check SUPABASE_SERVICE_ROLE_KEY in Vercel')
       return res.status(200).json({ success: true, mode: 'quote', requestId, plan: planData, quote, warning: 'Status no actualizado en DB — verificar clave' })

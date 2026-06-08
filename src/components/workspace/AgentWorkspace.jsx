@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../services/supabase'
-import { fetchRequest, fetchDeliverables, fetchAgentMessages, startOrchestration, sendChatMessage, deployWebsite, generateQuote } from '../../services/api'
+import { fetchRequest, fetchDeliverables, fetchAgentMessages, startOrchestration, sendChatMessage, deployWebsite, generateQuote, sendQuote } from '../../services/api'
 import { STATUS_LABELS, STATUS_COLORS } from '../../utils/constants'
 import {
   Bot, FileText, Globe, Image as ImageIcon, Code2, Download,
@@ -403,6 +403,22 @@ export default function AgentWorkspace({ request }) {
     setQuoting(false)
   }
 
+  const handleSendQuote = async () => {
+    addLog('Sistema', 'Enviando presupuesto...')
+    try {
+      const result = await sendQuote(reqData.id)
+      if (result.success) {
+        addLog('Sistema', result.message)
+        setReqData(prev => ({ ...prev, status: 'quote_sent', quote_sent_at: new Date().toISOString() }))
+        await loadData()
+      } else {
+        addLog('Sistema', `Error al enviar: ${result.error}`, 'error')
+      }
+    } catch (err) {
+      addLog('Sistema', `Error de conexión: ${err.message}`, 'error')
+    }
+  }
+
   const handleOrchestrate = async () => {
     setOrchestrating(true)
     addLog('Sistema', 'Iniciando orquestación...')
@@ -546,7 +562,16 @@ export default function AgentWorkspace({ request }) {
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Generando presupuesto...
             </span>
           )}
-          {reqData.status === 'quote_sent' && !isQuoteExpired && (
+          {reqData.status === 'quote_sent' && !isQuoteExpired && !reqData.quote_sent_at && (
+            <button
+              onClick={handleSendQuote}
+              className="btn-primary text-xs px-4 py-2"
+            >
+              <Send className="w-3.5 h-3.5" />
+              Enviar Presupuesto
+            </button>
+          )}
+          {reqData.status === 'quote_sent' && !isQuoteExpired && reqData.quote_sent_at && (
             <button
               onClick={handleOrchestrate}
               disabled={orchestrating}

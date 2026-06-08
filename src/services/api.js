@@ -77,6 +77,15 @@ export async function generateQuote(requestId) {
   return startOrchestration(requestId, 'quote')
 }
 
+export async function sendQuote(requestId) {
+  const response = await fetch('/api/send-quote', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requestId })
+  })
+  return response.json()
+}
+
 export async function sendChatMessage(requestId, message, agentId = null) {
   const response = await fetch('/api/chat', {
     method: 'POST',

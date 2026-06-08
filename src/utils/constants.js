@@ -12,7 +12,7 @@ export const REQUEST_STATUS = {
 export const STATUS_LABELS = {
   pending: 'Pendiente',
   quoting: 'Generando presupuesto',
-  quote_sent: 'Presupuesto enviado',
+  quote_sent: 'Presupuesto listo',
   in_progress: 'En progreso',
   review: 'En revisión',
   approved: 'Aprobado',
