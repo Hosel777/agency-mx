@@ -316,6 +316,8 @@ export default function AgentWorkspace({ request }) {
   const [editContent, setEditContent] = useState('')
   const [editStripeLink, setEditStripeLink] = useState('')
   const [saving, setSaving] = useState(false)
+  const [pollingTimeout, setPollingTimeout] = useState(false)
+  const pollingStartRef = useRef(null)
 
   useEffect(() => {
     if (activeFile?.agent_id === 'sales') {
@@ -347,10 +349,23 @@ export default function AgentWorkspace({ request }) {
 
   useEffect(() => { if (request?.id) { setReqData(request); loadData() } }, [request?.id])
 
-  // Live polling cada 3s si está en progreso
+  // Live polling cada 3s si está en progreso con detector de timeout
   useEffect(() => {
-    if (!request?.id || reqData.status !== 'in_progress') return
-    const interval = setInterval(loadData, 3000)
+    if (!request?.id || reqData.status !== 'in_progress') {
+      setPollingTimeout(false)
+      pollingStartRef.current = null
+      return
+    }
+    if (!pollingStartRef.current) pollingStartRef.current = Date.now()
+    setPollingTimeout(false)
+
+    const interval = setInterval(() => {
+      loadData()
+      // Si lleva más de 120s en in_progress, mostrar advertencia
+      if (pollingStartRef.current && Date.now() - pollingStartRef.current > 120000) {
+        setPollingTimeout(true)
+      }
+    }, 3000)
     return () => clearInterval(interval)
   }, [request?.id, reqData.status])
 
@@ -415,6 +430,15 @@ export default function AgentWorkspace({ request }) {
     }
 
     setOrchestrating(false)
+  }
+
+  const handleResetStatus = async () => {
+    await supabase.from('client_requests').update({ status: 'quote_sent' }).eq('id', reqData.id)
+    setReqData(prev => ({ ...prev, status: 'quote_sent' }))
+    setPollingTimeout(false)
+    pollingStartRef.current = null
+    addLog('Sistema', 'Estado reiniciado a quote_sent. Puedes intentar ejecutar agentes de nuevo.', 'info')
+    await loadData()
   }
 
   const handleDeliver = async (deliverableId) => {
@@ -572,6 +596,16 @@ export default function AgentWorkspace({ request }) {
             <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Agentes trabajando...
             </span>
+          )}
+          {pollingTimeout && reqData.status === 'in_progress' && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200">
+                Posible timeout — Vercel puede haber cortado la ejecución
+              </span>
+              <button onClick={handleResetStatus} className="text-xs px-3 py-1.5 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium">
+                Reintentar
+              </button>
+            </div>
           )}
           {reqData.status === 'completed' && (
             <span className="badge-green">Completado</span>

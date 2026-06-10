@@ -1,11 +1,10 @@
 const PROVIDER = process.env.LLM_PROVIDER || 'claude'
 const MODEL = process.env.LLM_MODEL || 'claude-sonnet-4-20250514'
-const TIMEOUT_MS = parseInt(process.env.LLM_TIMEOUT || '8000')
+const TIMEOUT_MS = parseInt(process.env.LLM_TIMEOUT || '6000')
 const FALLBACK_MODELS = (process.env.LLM_FALLBACK_MODELS || [
   'google/gemini-2.0-flash-exp:free',
   'meta-llama/llama-3.2-3b-instruct:free',
-  'microsoft/phi-3-medium-128k-instruct:free',
-  'mistralai/mistral-7b-instruct:free'
+  'microsoft/phi-3-medium-128k-instruct:free'
 ].join(',')).split(',').filter(Boolean)
 
 export async function callLLM(systemPrompt, messages, apiKey) {
