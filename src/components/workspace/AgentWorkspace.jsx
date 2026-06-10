@@ -629,7 +629,7 @@ export default function AgentWorkspace({ request }) {
               <div key={msg.id} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                 <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-agency-600 text-white rounded-2xl rounded-br-sm' : 'bg-gray-100 rounded-2xl rounded-bl-sm'} px-3 py-2 text-xs`}>
                   <p className="font-medium text-[10px] mb-0.5 opacity-70">{msg.agent_name || 'Agente'}</p>
-                  <p className="whitespace-pre-wrap">{msg.content?.substring(0, 300)}{msg.content?.length > 300 ? '...' : ''}</p>
+                   <p className="whitespace-pre-wrap text-xs leading-relaxed">{msg.content}</p>
                 </div>
               </div>
             ))}
