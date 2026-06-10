@@ -8,10 +8,16 @@ export function AppProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [requests, setRequests] = useState([])
   const [agentsActive, setAgentsActive] = useState([])
+  const [role, setRole] = useState('viewer')
 
   useEffect(() => {
     getCurrentUser().then(u => {
       setUser(u)
+      if (u) {
+        supabase.from('user_roles').select('role').eq('user_id', u.id).single().then(({ data }) => {
+          if (data?.role) setRole(data.role)
+        })
+      }
       setLoading(false)
     })
 
@@ -36,7 +42,7 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      user, loading,
+      user, loading, role, setRole,
       requests, fetchRequests,
       agentsActive, setAgentsActive,
     }}>

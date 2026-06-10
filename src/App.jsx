@@ -3,6 +3,7 @@ import DashboardLayout from './components/layout/DashboardLayout'
 import Dashboard from './pages/Dashboard'
 import NewRequest from './pages/NewRequest'
 import RequestDetail from './pages/RequestDetail'
+import RequestsKanban from './pages/RequestsKanban'
 import Agents from './pages/Agents'
 import Approvals from './pages/Approvals'
 import Settings from './pages/Settings'
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/nueva-solicitud" element={<NewRequest />} />
         <Route path="/solicitud/:id" element={<RequestDetail />} />
+        <Route path="/kanban" element={<RequestsKanban />} />
         <Route path="/agentes" element={<Agents />} />
         <Route path="/aprobaciones" element={<Approvals />} />
         <Route path="/configuracion" element={<Settings />} />

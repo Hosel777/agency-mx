@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { Key, Save, Bot, CheckCircle2, ExternalLink, Sparkles, Shield } from 'lucide-react'
+import { Key, Save, Bot, CheckCircle2, ExternalLink, Sparkles, Shield, Globe, Download } from 'lucide-react'
+import { useI18n, LOCALES } from '../contexts/I18nContext'
+import { usePWA } from '../hooks/usePWA'
 
 export default function Settings() {
+  const { locale, changeLocale } = useI18n()
+  const { installPrompt, isInstalled, install } = usePWA()
   const [supabaseUrl] = useState(import.meta.env.VITE_SUPABASE_URL || '')
   const [supabaseKey] = useState(import.meta.env.VITE_SUPABASE_ANON_KEY || '')
   const [apiKey, setApiKey] = useState('')
@@ -108,6 +112,51 @@ export default function Settings() {
             </p>
           </div>
         </div>
+
+        <div className="border-t border-outline-variant/20" />
+
+        <div>
+          <div className="flex items-center gap-3 mb-5">
+            <div className="p-2.5 rounded-xl bg-tertiary/10">
+              <Globe className="w-5 h-5 text-tertiary" />
+            </div>
+            <div>
+              <h2 className="font-h3 text-h3 text-on-surface">Idioma / Language</h2>
+              <p className="text-caption text-on-surface-variant">Selecciona el idioma de la interfaz</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {LOCALES.map(l => (
+              <button
+                key={l.code}
+                onClick={() => changeLocale(l.code)}
+                className={`px-4 py-2 rounded-xl text-body-md transition-all ${locale === l.code ? 'bg-primary text-on-primary font-bold' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-hover'}`}
+              >
+                {l.flag} {l.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {!isInstalled && installPrompt && (
+          <>
+            <div className="border-t border-outline-variant/20" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-secondary/10">
+                  <Download className="w-5 h-5 text-secondary" />
+                </div>
+                <div>
+                  <h2 className="font-h3 text-h3 text-on-surface">Instalar App</h2>
+                  <p className="text-caption text-on-surface-variant">Usa Agency MX como aplicación de escritorio</p>
+                </div>
+              </div>
+              <button onClick={install} className="btn-primary text-caption px-5">
+                <Download className="w-4 h-4" /> Instalar
+              </button>
+            </div>
+          </>
+        )}
 
         <div className="border-t border-outline-variant/20 pt-6 flex justify-end">
           <button onClick={handleSave} disabled={saving} className="btn-primary">

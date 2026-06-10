@@ -2,10 +2,11 @@ import { useMemo, useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
 import { fetchDashboardStats, createDemoRequest } from '../services/api'
+import { RequestsPieChart, RequestsBarChart, RequestsTimelineChart } from '../components/dashboard/Charts'
 import {
   ClipboardList, PlusCircle, Bot, CheckCircle2,
   Clock, AlertCircle, Loader2, ArrowRight, TrendingUp,
-  FileText, Sparkles, Zap, Activity, BarChart3,
+  FileText, Sparkles, Zap, Activity, BarChart3, PieChart as PieIcon,
   Globe, MessageSquare, Play, ExternalLink
 } from 'lucide-react'
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/constants'
@@ -187,7 +188,38 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Row 3: Source breakdown + efficiency */}
+          {/* Row 3: Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+            <div className="glass-card rounded-2xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <PieIcon className="w-5 h-5" />
+                </div>
+                <h3 className="font-h3 text-h3 text-on-surface">Estado de Solicitudes</h3>
+              </div>
+              <RequestsPieChart requests={requests} />
+            </div>
+            <div className="glass-card rounded-2xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+                  <BarChart3 className="w-5 h-5" />
+                </div>
+                <h3 className="font-h3 text-h3 text-on-surface">Por Estado</h3>
+              </div>
+              <RequestsBarChart requests={requests} />
+            </div>
+            <div className="glass-card rounded-2xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-tertiary/10 flex items-center justify-center text-tertiary">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+                <h3 className="font-h3 text-h3 text-on-surface">Línea de Tiempo</h3>
+              </div>
+              <RequestsTimelineChart requests={requests} />
+            </div>
+          </div>
+
+          {/* Row 4: Source breakdown + efficiency */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
             <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">

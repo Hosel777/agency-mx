@@ -1,7 +1,7 @@
 # CONTEXTO DEL PROYECTO — Agency MX
 
 > Guardar este archivo cada vez que se avance para no perder el hilo si se cuelga o apaga la PC.
-> Última actualización: 8 Junio 2026 — Sesión 7: Dashboard enterprise + Timeline visual + Demo Rápida
+> Última actualización: 10 Junio 2026 — Sesión 8: Diseño visual Material 3 dark + 17 archivos renovados
 
 ---
 
@@ -130,7 +130,7 @@ agency-mx/
 
 | Área | % |
 |---|---|
-| UI / Frontend visual | **98%** |
+| UI / Frontend visual | **100%** |
 | CRUD contra Supabase | **95%** |
 | Autenticación (Login/Register/Logout) | **100%** |
 | Integración con IA (Claude Sonnet) | **100%** (backend listo, falta API key) |
@@ -145,7 +145,7 @@ agency-mx/
 | Dashboard con métricas enterprise | **100%** |
 | Timeline visual de orquestación | **100%** |
 | Demo Rápida (endpoint + UI) | **100%** |
-| **GLOBAL** | **~97%** |
+| **GLOBAL** | **~99%** |
 
 ## PENDIENTE
 
@@ -227,21 +227,21 @@ vercel dev         # Inicia todo localmente (frontend + api)
 ## PRÓXIMA SESIÓN — CONTINUAR DESDE AQUÍ
 
 Lo último completado:
-- ✅ **112 agentes sincronizados en todos lados** (.md, SQL, JS frontend, prompts backend)
-- ✅ **114 prompts de agente** en `api/lib/agents.js` (91 del repo msitarzewski/agency-agents + 15 originales + 8 manuales)
-- ✅ **12 cadenas de orquestación** (4 nuevas: sales_outbound, content_marketing, email_campaign, security_audit)
-- ✅ Agents page conectada a Supabase con fallback local (112 agentes)
-- ✅ SQL seed con 112 agentes
-- ✅ Supabase Storage + FileUpload component
-- ✅ DeliverablePreview usa deliverable_type de la BD
-- ✅ Guía de deploy completa en este documento
-- ❌ El proyecto está ~95% listo para producción
+- ✅ **Diseño visual Material 3 dark** — toda la UI renovada con 112 colores M3, tipografía enterprise, glass-card, backdrop-blur
+- ✅ **17 archivos modificados** + 1 creado (PROMPT-CURSOR-VISUAL.md) — 1011 líneas agregadas, 653 eliminadas
+- ✅ **7 páginas oscuras**: Login, Dashboard, Approvals, NewRequest, Agents, Settings, RequestDetail
+- ✅ **4 componentes oscuros**: AgentWorkspace (3 paneles VSCode), OrchestrationTimeline, AgentChat, DeliverablePreview, FileUpload
+- ✅ **3 componentes layout oscuros**: Sidebar (logo gradient), Header (glass), DashboardLayout
+- ✅ **tailwind.config.js**: colores M3 + type scale + sombras + animaciones
+- ✅ **src/index.css**: .glass-card, .btn-*, .input-field, .badge-*, scrollbar, font-utilities
+- ✅ **Build exitoso**: 0 errores, 36.78 KB CSS / 499.87 KB JS
+- ✅ **Commit + Push**: `fab9157` a `origin/main`
+- ❌ Proyecto ~99% listo para producción
 
 Pasos para la próxima sesión:
-1. Hacer deploy a Vercel siguiendo la guía (faltan ANTHROPIC_API_KEY y SUPABASE_SERVICE_ROLE_KEY)
-2. Probar que la orquestación funcione con las 12 cadenas
-3. Agregar pruebas automatizadas (opcional)
-4. Si se usa Vercel Hobby, evaluar migrar a Pro por timeout de 10s en orquestaciones largas
+1. Probar la app completa en producción (Login → Crear solicitud → Orquestación → Aprobaciones)
+2. Agregar pruebas automatizadas
+3. Si se usa Vercel Hobby, evaluar migrar a Pro por timeout de 10s en orquestaciones largas
 
 ---
 
@@ -316,3 +316,29 @@ ANTHROPIC_API_KEY=           <-- obtener de https://console.anthropic.com
   - También disponible sin login en la pantalla de Login
 - ✅ Build exitoso (1810 módulos, 491KB JS, 45KB CSS)
 - ✅ Progreso global: ~95% → ~97%
+
+### Sesión 8 — Diseño visual Material 3 dark completo (Commit: fab9157)
+- ✅ **Material 3 Dark Design System** implementado al 100%:
+  - `tailwind.config.js`: 112 colores M3 (primary, secondary, tertiary, surface, error con sus variantes), type scale completa (display/h1/h2/h3/body-lg/body-md/label-md/label-sm/caption), spacing, box-shadows, keyframes/animaciones
+  - `src/index.css`: estilos base dark, `.glass-card` (backdrop-blur + rgba), `.btn-primary/secondary/ghost`, `.input-field`, `.badge-*`, scrollbar dark, utilidades `font-*`
+- ✅ **Sidebar.jsx**: logo gradient `from-primary to-secondary`, fondo `bg-surface-container`, borde activo `border-r-2 border-primary`, botón campaña compacto
+- ✅ **Header.jsx**: `bg-surface/80 backdrop-blur-xl`, search input oscuro, navegación dark, menú usuario oscuro
+- ✅ **Login.jsx**: fondo atmosférico con gradientes blur + dot pattern, formulario glass-card, partículas canvas, botones Google/SSO dark, Demo link sin register
+- ✅ **Dashboard.jsx**: 6 tarjetas glass-card con `text-[32px]`, layout 3 filas, tabla oscura, StatBar component, Demo Rápida button
+- ✅ **Approvals.jsx**: grilla entregables glass-card con hover lift, filtros tipo pill, badges M3 color, botones approve/reject/deliver
+- ✅ **NewRequest.jsx**: formulario con secciones glass-card, inputs/select/textarea oscuros
+- ✅ **Agents.jsx**: árbol jerarquía dark, orchestrator destacado gradiente, departamentos colapsables
+- ✅ **Settings.jsx**: secciones Supabase + API Key en glass-card, badge conexión terciario
+- ✅ **RequestDetail.jsx**: breadcrumb dark, Link hover primary
+- ✅ **AgentWorkspace.jsx**: layout 3 paneles VSCode dark — explorador archivos (`bg-surface-container-high`), editor/preview con tabs dark, chat panel con burbujas `bg-primary`, terminal oscuro
+- ✅ **OrchestrationTimeline.jsx**: timeline dark con burbujas por nivel, agrupación por agente, vista plana
+- ✅ **FileUpload.jsx**: dropzone dashed dark, lista archivos `bg-surface-container-low`
+- ✅ **DeliverablePreview.jsx**: modal dark con tabs, previews html/image/code/text en theme oscuro
+- ✅ **AgentChat.jsx**: sidebar filtro agentes dark, mensajes con íconos primary, input field oscuro
+- ✅ **DashboardLayout.jsx**: fondo `bg-surface`
+- ✅ **PROMPT-CURSOR-VISUAL.md**: especificación completa del design system para Cursor
+- ✅ **Bugfix**: se eliminaron clases `font-label-md` de `@apply` (redundantes con `text-label-md`)
+- ✅ **Bugfix**: se agregaron utilidades `font-*` en `@layer utilities`
+- ✅ **Build exitoso**: 0 errores, 36.78 KB CSS / 499.87 KB JS
+- ✅ **Commit + Push**: `fab9157` a `origin/main`
+- ✅ Progreso global: ~97% → ~99%

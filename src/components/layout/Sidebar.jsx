@@ -1,13 +1,14 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, PlusCircle, Bot,
-  CheckCircle2, Settings, Sparkles
+  CheckCircle2, Settings, Sparkles, Columns3
 } from 'lucide-react'
 import AGENTS_HIERARCHY from '../../utils/agents'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/nueva-solicitud', icon: PlusCircle, label: 'Nueva Solicitud' },
+  { to: '/kanban', icon: Columns3, label: 'Kanban' },
   { to: '/agentes', icon: Bot, label: 'Agentes' },
   { to: '/aprobaciones', icon: CheckCircle2, label: 'Aprobaciones' },
   { to: '/configuracion', icon: Settings, label: 'Configuración' },
@@ -15,7 +16,14 @@ const navItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-surface-container border-r border-outline-variant flex flex-col flex-shrink-0 shadow-sidebar">
+    <>
+      <button
+        className="fixed bottom-4 right-4 z-50 lg:hidden w-12 h-12 rounded-xl bg-primary text-on-primary shadow-lg shadow-primary/30 flex items-center justify-center"
+        onClick={() => document.getElementById('mobile-sidebar')?.classList.toggle('translate-x-0')}
+      >
+        <Sparkles className="w-5 h-5" />
+      </button>
+      <aside id="mobile-sidebar" className="w-64 bg-surface-container border-r border-outline-variant flex flex-col flex-shrink-0 shadow-sidebar fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0 transition-transform duration-300">
       <div className="px-4 py-6">
         <h1 className="font-h2 text-h2 font-black bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary leading-tight">Agency MX</h1>
         <p className="text-label-sm font-label-sm text-on-surface-variant opacity-60 uppercase tracking-widest mt-1">Enterprise AI Marketing</p>
@@ -60,5 +68,15 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+      {/* Mobile overlay */}
+      <div
+        className="fixed inset-0 bg-black/40 z-30 lg:hidden hidden"
+        id="sidebar-overlay"
+        onClick={() => document.getElementById('mobile-sidebar')?.classList.remove('translate-x-0')}
+      />
+      <style>{`
+        #mobile-sidebar.translate-x-0 ~ #sidebar-overlay { display: block; }
+      `}</style>
+    </>
   )
 }

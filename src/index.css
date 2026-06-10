@@ -3,7 +3,111 @@
 @tailwind utilities;
 
 @layer base {
-  * { @apply border-outline-variant/30; }
+  * { @apply border-outline-variant; }
+
+  :root,
+  .light {
+    --color-primary: #494bd6;
+    --color-primary-container: #e1e0ff;
+    --color-on-primary: #ffffff;
+    --color-on-primary-container: #1a0096;
+    --color-primary-fixed: #e1e0ff;
+    --color-primary-fixed-dim: #c0c1ff;
+    --color-secondary: #008753;
+    --color-secondary-container: #7cf9c5;
+    --color-on-secondary: #ffffff;
+    --color-on-secondary-container: #003120;
+    --color-secondary-fixed: #7cf9c5;
+    --color-secondary-fixed-dim: #5ddcaa;
+    --color-tertiary: #8c5e00;
+    --color-tertiary-container: #ffddb6;
+    --color-on-tertiary: #ffffff;
+    --color-on-tertiary-container: #0b0400;
+    --color-tertiary-fixed: #ffddb6;
+    --color-tertiary-fixed-dim: #ffb95b;
+    --color-surface: #faf8ff;
+    --color-surface-dim: #e0dff0;
+    --color-surface-bright: #faf8ff;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-low: #f0effc;
+    --color-surface-container: #eae9f6;
+    --color-surface-container-high: #dfdef0;
+    --color-surface-container-highest: #d3d2e4;
+    --color-surface-variant: #e5e3f0;
+    --color-surface-container-hover: rgba(0,0,0,0.04);
+    --color-on-surface: #1b1b23;
+    --color-on-surface-variant: #474659;
+    --color-background: #faf8ff;
+    --color-on-background: #1b1b23;
+    --color-outline: #77768a;
+    --color-outline-variant: #c7c4d7;
+    --color-error: #ba1a1a;
+    --color-error-container: #ffdad6;
+    --color-on-error: #ffffff;
+    --color-on-error-container: #410002;
+    --color-warning: #b85800;
+    --color-inverse-surface: #313039;
+    --color-inverse-primary: #c0c1ff;
+    --color-inverse-on-surface: #f0effc;
+    --color-surface-tint: #494bd6;
+
+    --glass-bg: rgba(255, 255, 255, 0.6);
+    --glass-border: rgba(0, 0, 0, 0.06);
+    --scrollbar-thumb: #d3d2e4;
+    --scrollbar-thumb-hover: #b8b7cc;
+  }
+
+  .dark {
+    --color-primary: #c0c1ff;
+    --color-primary-container: #8083ff;
+    --color-on-primary: #1000a9;
+    --color-on-primary-container: #0d0096;
+    --color-primary-fixed: #e1e0ff;
+    --color-primary-fixed-dim: #c0c1ff;
+    --color-secondary: #5ddcaa;
+    --color-secondary-container: #06a577;
+    --color-on-secondary: #003826;
+    --color-on-secondary-container: #003120;
+    --color-secondary-fixed: #7cf9c5;
+    --color-secondary-fixed-dim: #5ddcaa;
+    --color-tertiary: #ffb95b;
+    --color-tertiary-container: #a66a00;
+    --color-on-tertiary: #462a00;
+    --color-on-tertiary-container: #0b0400;
+    --color-tertiary-fixed: #ffddb6;
+    --color-tertiary-fixed-dim: #ffb95b;
+    --color-surface: #13131b;
+    --color-surface-dim: #13131b;
+    --color-surface-bright: #393841;
+    --color-surface-container-lowest: #0d0d15;
+    --color-surface-container-low: #1b1b23;
+    --color-surface-container: #1f1f27;
+    --color-surface-container-high: #292932;
+    --color-surface-container-highest: #34343d;
+    --color-surface-variant: #34343d;
+    --color-surface-container-hover: rgba(255,255,255,0.04);
+    --color-on-surface: #e4e1ed;
+    --color-on-surface-variant: #c7c4d7;
+    --color-background: #13131b;
+    --color-on-background: #e4e1ed;
+    --color-outline: #908fa0;
+    --color-outline-variant: #464554;
+    --color-error: #ffb4ab;
+    --color-error-container: #93000a;
+    --color-on-error: #690005;
+    --color-on-error-container: #ffdad6;
+    --color-warning: #ffb95b;
+    --color-inverse-surface: #e4e1ed;
+    --color-inverse-primary: #494bd6;
+    --color-inverse-on-surface: #303038;
+    --color-surface-tint: #c0c1ff;
+
+    --glass-bg: rgba(26, 26, 26, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --scrollbar-thumb: #34343d;
+    --scrollbar-thumb-hover: #464554;
+  }
+
   body {
     @apply bg-surface-dim text-on-surface antialiased;
     font-family: 'Inter', system-ui, sans-serif;
@@ -15,7 +119,7 @@
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-label-md
            bg-primary text-on-primary font-bold
            hover:brightness-110
-           shadow-lg shadow-primary/20
+           shadow-lg shadow-black/20
            active:scale-[0.97] transition-all duration-200
            disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
   }
@@ -33,31 +137,34 @@
   }
   .input-field {
     @apply w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-xl text-body-md text-on-surface
-           placeholder:text-outline/50
-           focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
+           placeholder:text-outline
+           focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
            transition-all duration-200;
   }
   .card {
-    @apply bg-surface-container-low rounded-xl border border-outline-variant/20 shadow-card
+    @apply bg-surface-container-low rounded-xl border border-outline-variant shadow-card
            hover:shadow-card-hover transition-all duration-300;
   }
   .card-glass {
-    @apply bg-surface/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-glass;
+    @apply bg-surface backdrop-blur-xl rounded-2xl border border-white/10 shadow-glass;
   }
   .badge {
     @apply inline-flex items-center px-2.5 py-1 rounded-full text-label-sm;
   }
-  .badge-green { @apply badge bg-secondary/10 text-secondary; }
-  .badge-blue { @apply badge bg-primary/10 text-primary; }
-  .badge-yellow { @apply badge bg-tertiary/10 text-tertiary; }
-  .badge-purple { @apply badge bg-primary-container/20 text-primary-container; }
+  .badge-green,
+  .badge-success { @apply badge text-secondary; background: color-mix(in srgb, var(--color-secondary) 15%, transparent); }
+  .badge-blue,
+  .badge-info { @apply badge text-primary; background: color-mix(in srgb, var(--color-primary) 15%, transparent); }
+  .badge-yellow,
+  .badge-warning { @apply badge text-tertiary; background: color-mix(in srgb, var(--color-tertiary) 15%, transparent); }
+  .badge-purple { @apply badge text-primary-container; background: color-mix(in srgb, var(--color-primary-container) 25%, transparent); }
   .badge-gray { @apply badge bg-surface-variant text-on-surface-variant; }
-  .badge-error { @apply badge bg-error/10 text-error; }
+  .badge-error { @apply badge text-error; background: color-mix(in srgb, var(--color-error) 15%, transparent); }
 
   .glass-card {
-    background: rgba(26, 26, 26, 0.6);
+    background: var(--glass-bg);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--glass-border);
   }
 
   .section-title {
@@ -67,22 +174,16 @@
     @apply text-2xl font-bold text-on-surface tracking-tight;
   }
   .text-muted {
-    @apply text-sm text-on-surface-variant;
+    @apply text-body-md text-on-surface-variant;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    background: linear-gradient(135deg, theme('colors.primary') 0%, theme('colors.secondary') 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-  }
-  .glass-card {
-    background: rgba(26, 26, 26, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
   }
   .font-display { font-family: theme('fontFamily.display'); }
   .font-h1 { font-family: theme('fontFamily.display'); }
@@ -95,17 +196,7 @@
   .font-caption { font-family: theme('fontFamily.sans'); }
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #34343d;
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #464554;
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
