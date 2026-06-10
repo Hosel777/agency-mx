@@ -318,6 +318,7 @@ export default function AgentWorkspace({ request }) {
   const [saving, setSaving] = useState(false)
   const [pollingTimeout, setPollingTimeout] = useState(false)
   const pollingStartRef = useRef(null)
+  const processingStepRef = useRef(false)
 
   useEffect(() => {
     if (activeFile?.agent_id === 'sales') {
@@ -347,9 +348,26 @@ export default function AgentWorkspace({ request }) {
     }
   }
 
+  // Procesa el siguiente agente en la cadena (una llamada = un agente)
+  const processNextStep = async () => {
+    if (processingStepRef.current) return
+    processingStepRef.current = true
+    try {
+      const result = await startOrchestration(reqData.id)
+      if (result.done) {
+        addLog('Sistema', 'Orquestación completada')
+        pollingStartRef.current = null
+      }
+    } catch (err) {
+      addLog('Sistema', `Error en paso: ${err.message}`, 'error')
+    } finally {
+      processingStepRef.current = false
+    }
+  }
+
   useEffect(() => { if (request?.id) { setReqData(request); loadData() } }, [request?.id])
 
-  // Live polling cada 3s si está en progreso con detector de timeout
+  // Polling: cada 3s procesa siguiente agente + actualiza datos
   useEffect(() => {
     if (!request?.id || reqData.status !== 'in_progress') {
       setPollingTimeout(false)
@@ -359,13 +377,16 @@ export default function AgentWorkspace({ request }) {
     if (!pollingStartRef.current) pollingStartRef.current = Date.now()
     setPollingTimeout(false)
 
-    const interval = setInterval(() => {
-      loadData()
-      // Si lleva más de 120s en in_progress, mostrar advertencia
-      if (pollingStartRef.current && Date.now() - pollingStartRef.current > 120000) {
+    const tick = async () => {
+      await processNextStep()
+      await loadData()
+      if (pollingStartRef.current && Date.now() - pollingStartRef.current > 180000) {
         setPollingTimeout(true)
       }
-    }, 3000)
+    }
+
+    tick()
+    const interval = setInterval(tick, 4000)
     return () => clearInterval(interval)
   }, [request?.id, reqData.status])
 
@@ -419,7 +440,8 @@ export default function AgentWorkspace({ request }) {
     try {
       const result = await startOrchestration(reqData.id)
       if (result.success) {
-        addLog('Agents Orchestrator', `Plan ejecutado: ${result.agentsActivated} agentes activados, ${result.deliverablesGenerated} entregables generados`)
+        const total = result.total || '?'
+        addLog('Agents Orchestrator', `Plan generado. Paso ${result.step || 1}/${total} completado`)
         setReqData(prev => ({ ...prev, status: 'in_progress' }))
         await loadData()
       } else {

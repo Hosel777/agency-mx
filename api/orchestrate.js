@@ -183,35 +183,37 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Request not found' })
     }
 
-    await addLog(requestId, 'Sistema', 'Iniciando orquestación...')
-    await addLog(requestId, 'Sistema', `Tipo de proyecto: ${request.project_type}`)
+    // ─── Load existing deliverables to know what's been done ───
+    const { data: existingDeliverables } = await supabase
+      .from('deliverables')
+      .select('agent_id, content, agent_name')
+      .eq('request_id', requestId)
+      .eq('status', 'completed')
 
-    await supabase
-      .from('client_requests')
-      .update({ status: 'in_progress' })
-      .eq('id', requestId)
+    const doneAgentIds = new Set(existingDeliverables?.map(d => d.agent_id) || [])
 
-    // --- Step 1: Use saved plan (from quote mode) or run orchestrator ---
+    // ─── STEP 1: Generate or retrieve plan ───
     let plan, chainId, chain, agentSequence, agentInstructions
 
     if (request.orchestration_plan) {
-      // Reuse plan from quote step
       const saved = request.orchestration_plan
       chainId = saved.chain || request.project_type || 'full'
       chain = CHAINS[chainId] || CHAINS.full
       agentSequence = chain.agents
       plan = saved
-
       agentInstructions = {}
       if (saved.agentes) {
         saved.agentes.forEach(a => { agentInstructions[a.id] = a.instrucciones })
       }
-
-      await addLog(requestId, 'Sistema', 'Usando plan generado durante el presupuesto')
-      await addLog(requestId, 'Agents Orchestrator', `Plan recuperado: ${chain.label} (${agentSequence.length} agentes)`)
     } else {
-      // Run orchestrator to generate plan
+      if (doneAgentIds.size > 0) {
+        return res.status(400).json({ error: 'No plan found but deliverables exist — inconsistent state' })
+      }
+
+      await addLog(requestId, 'Sistema', 'Iniciando orquestación...')
+      await addLog(requestId, 'Sistema', `Tipo de proyecto: ${request.project_type}`)
       await addLog(requestId, 'Agents Orchestrator', 'Analizando solicitud y generando plan de ejecución...')
+
       const orchestratorPrompt = AGENT_PROMPTS['agents-orchestrator']
       const orchestratorMsg = `Analiza la siguiente solicitud de marketing:
 
@@ -256,96 +258,101 @@ Genera el plan de ejecución en formato JSON. Recuerda que debes definir qué ca
         plan.agentes.forEach(a => { agentInstructions[a.id] = a.instrucciones })
       }
 
-      // Save plan for future use
       await supabase.from('client_requests').update({
         orchestration_plan: { chain: chainId, agents: agentSequence, agentes: plan?.agentes || [] }
       }).eq('id', requestId)
     }
 
-    // --- Step 2: Execute each agent ---
-    const completedDeliverables = []
+    // ─── STEP 2: Find NEXT unprocessed agent ───
+    const nextIndex = agentSequence.findIndex(id => !doneAgentIds.has(id))
+    if (doneAgentIds.size === 0) {
+      // First call — set in_progress
+      await supabase.from('client_requests').update({ status: 'in_progress' }).eq('id', requestId)
+    }
+
+    if (nextIndex === -1) {
+      // All agents done!
+      await addLog(requestId, 'Sistema', `Orquestación completada: ${doneAgentIds.size} entregables generados por ${agentSequence.length} agentes`)
+      await addLog(requestId, 'Sistema', 'Los entregables están listos para revisión en Aprobaciones')
+      await supabase.from('client_requests').update({ status: 'completed' }).eq('id', requestId)
+      return res.status(200).json({ success: true, done: true, step: agentSequence.length, total: agentSequence.length })
+    }
+
+    // ─── STEP 3: Execute the NEXT agent ───
+    const agentId = agentSequence[nextIndex]
+    const agentConfig = AGENT_PROMPTS[agentId]
+    if (!agentConfig) {
+      // Skip missing agent — try next call
+      return res.status(200).json({ success: true, step: nextIndex + 1, total: agentSequence.length, skipped: agentId })
+    }
+
+    await addLog(requestId, agentConfig.name, `Trabajando... (${nextIndex + 1}/${agentSequence.length})`)
+
+    // Build context from previous deliverables
     const brandContext = formatBrandContext(request.brand_data, request.images)
     let previousContext = `Solicitud original:\nTítulo: ${request.title}\nDescripción: ${request.description}\n${brandContext}\n`
 
-    for (let i = 0; i < agentSequence.length; i++) {
-      const agentId = agentSequence[i]
-      const agentConfig = AGENT_PROMPTS[agentId]
-      if (!agentConfig) continue
-
-      await addLog(requestId, agentConfig.name, `Trabajando... (${i + 1}/${agentSequence.length})`)
-      await addLog(requestId, 'Sistema', `Procesando: ${agentConfig.name}`)
-
-      let agentMessage = previousContext
-      if (agentInstructions[agentId]) {
-        agentMessage += `Instrucciones específicas: ${agentInstructions[agentId]}\n\n`
+    if (existingDeliverables) {
+      for (const d of existingDeliverables) {
+        previousContext += `\n\n--- ${d.agent_name} ---\n${(d.content || '').substring(0, 3000)}`
       }
-      agentMessage += `Basándote en la información anterior y el contexto del proyecto, genera tu entregable como ${agentConfig.name}.`
-
-      const agentResponse = await callLLM(
-        agentConfig.systemPrompt,
-        [{ role: 'user', content: agentMessage }],
-        apiKey
-      )
-
-      await addLog(requestId, agentConfig.name, 'Entregable generado')
-
-      await supabase.from('agent_messages').insert({
-        request_id: requestId,
-        agent_name: agentConfig.name,
-        agent_id: agentId,
-        role: 'assistant',
-        content: agentResponse
-      })
-
-      const deliverableName = `${agentConfig.emoji} ${agentConfig.name}: ${request.title}`
-      const { data: deliverable } = await supabase.from('deliverables').insert({
-        request_id: requestId,
-        agent_id: agentId,
-        agent_name: agentConfig.name,
-        name: deliverableName,
-        description: `Entregable generado por ${agentConfig.name} para: ${request.title}`,
-        content: agentResponse,
-        deliverable_type: agentConfig.deliverableType || 'text',
-        status: 'completed'
-      }).select().single()
-
-      if (deliverable) {
-        completedDeliverables.push(deliverable)
-      }
-
-      previousContext += `\n\n--- ${agentConfig.name} ---\n${agentResponse.substring(0, 3000)}`
     }
 
-    // --- Step 3: Complete ---
-    await addLog(requestId, 'Sistema', `Orquestación completada: ${completedDeliverables.length} entregables generados por ${agentSequence.length} agentes`)
-    await addLog(requestId, 'Sistema', 'Los entregables están listos para revisión en Aprobaciones')
+    let agentMessage = previousContext
+    if (agentInstructions[agentId]) {
+      agentMessage += `\n\nInstrucciones específicas: ${agentInstructions[agentId]}`
+    }
+    agentMessage += `\n\nBasándote en la información anterior y el contexto del proyecto, genera tu entregable como ${agentConfig.name}.`
 
-    await supabase
-      .from('client_requests')
-      .update({ status: 'completed' })
-      .eq('id', requestId)
+    const agentResponse = await callLLM(
+      agentConfig.systemPrompt,
+      [{ role: 'user', content: agentMessage }],
+      apiKey
+    )
+
+    await addLog(requestId, agentConfig.name, 'Entregable generado')
+
+    await supabase.from('agent_messages').insert({
+      request_id: requestId,
+      agent_name: agentConfig.name,
+      agent_id: agentId,
+      role: 'assistant',
+      content: agentResponse
+    })
+
+    const deliverableName = `${agentConfig.emoji} ${agentConfig.name}: ${request.title}`
+    await supabase.from('deliverables').insert({
+      request_id: requestId,
+      agent_id: agentId,
+      agent_name: agentConfig.name,
+      name: deliverableName,
+      description: `Entregable generado por ${agentConfig.name} para: ${request.title}`,
+      content: agentResponse,
+      deliverable_type: agentConfig.deliverableType || 'text',
+      status: 'completed'
+    })
+
+    // ─── STEP 4: Check if all done ───
+    const remainingCount = agentSequence.slice(nextIndex + 1).filter(id => AGENT_PROMPTS[id]).length
+    if (remainingCount === 0) {
+      await addLog(requestId, 'Sistema', `Orquestación completada: ${doneAgentIds.size + 1} entregables generados por ${agentSequence.length} agentes`)
+      await addLog(requestId, 'Sistema', 'Los entregables están listos para revisión en Aprobaciones')
+      await supabase.from('client_requests').update({ status: 'completed' }).eq('id', requestId)
+      return res.status(200).json({ success: true, done: true, step: nextIndex + 1, total: agentSequence.length })
+    }
 
     return res.status(200).json({
       success: true,
-      requestId,
-      agentsActivated: agentSequence.length,
-      deliverablesGenerated: completedDeliverables.length,
-      plan: plan || { chain: chainId, agents: agentSequence }
+      done: false,
+      step: nextIndex + 1,
+      total: agentSequence.length,
+      currentAgent: agentConfig.name
     })
 
   } catch (error) {
     console.error('Orchestration error:', error)
-
     await addLog(requestId, 'Sistema', `Error: ${error.message}`, 'error')
-
-    await supabase
-      .from('client_requests')
-      .update({ status: 'error' })
-      .eq('id', requestId)
-
-    return res.status(500).json({
-      error: error.message,
-      requestId
-    })
+    await supabase.from('client_requests').update({ status: 'error' }).eq('id', requestId)
+    return res.status(500).json({ error: error.message, requestId })
   }
 }
