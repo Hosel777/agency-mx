@@ -199,7 +199,7 @@ export default async function handler(req, res) {
       const saved = request.orchestration_plan
       chainId = saved.chain || request.project_type || 'full'
       chain = CHAINS[chainId] || CHAINS.full
-      agentSequence = chain.agents
+      agentSequence = saved.agents && saved.agents.length > 0 ? saved.agents : chain.agents
       plan = saved
       agentInstructions = {}
       if (saved.agentes) {

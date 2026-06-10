@@ -1,6 +1,6 @@
 const PROVIDER = process.env.LLM_PROVIDER || 'claude'
 const MODEL = process.env.LLM_MODEL || 'claude-sonnet-4-20250514'
-const TIMEOUT_MS = parseInt(process.env.LLM_TIMEOUT || '6000')
+const TIMEOUT_MS = parseInt(process.env.LLM_TIMEOUT || '50000')
 const FALLBACK_MODELS = (process.env.LLM_FALLBACK_MODELS || [
   'google/gemini-2.0-flash-exp:free',
   'meta-llama/llama-3.2-3b-instruct:free',
@@ -72,7 +72,7 @@ async function callOpenRouter(systemPrompt, messages, apiKey) {
 }
 
 async function callClaude(systemPrompt, messages, apiKey) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const response = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -85,7 +85,7 @@ async function callClaude(systemPrompt, messages, apiKey) {
       system: systemPrompt,
       messages
     })
-  })
+  }, TIMEOUT_MS)
 
   if (!response.ok) {
     const error = await response.text()

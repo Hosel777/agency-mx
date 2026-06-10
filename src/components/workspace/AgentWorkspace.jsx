@@ -354,7 +354,10 @@ export default function AgentWorkspace({ request }) {
     processingStepRef.current = true
     try {
       const result = await startOrchestration(reqData.id)
-      if (result.done) {
+      if (result?.error) {
+        addLog('Sistema', `Error: ${result.error}`, 'error')
+        await loadData()
+      } else if (result?.done) {
         addLog('Sistema', 'Orquestación completada')
         pollingStartRef.current = null
       }
