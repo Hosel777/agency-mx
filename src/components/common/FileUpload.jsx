@@ -39,11 +39,11 @@ export default function FileUpload({ onUpload, path = '', accept = '*', multiple
     <div className="space-y-2">
       <div
         onClick={() => inputRef.current?.click()}
-        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-agency-400 hover:bg-agency-50/50 transition-colors"
+        className="border-2 border-dashed border-outline-variant/40 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
       >
-        <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-        <p className="text-sm text-gray-500">Arrastra archivos o haz clic para seleccionar</p>
-        <p className="text-xs text-gray-400 mt-1">Los archivos se almacenan en Supabase Storage</p>
+        <Upload className="w-8 h-8 mx-auto text-on-surface-variant/40 mb-2" />
+        <p className="text-body-md text-on-surface-variant">Arrastra archivos o haz clic para seleccionar</p>
+        <p className="text-caption text-on-surface-variant/60 mt-1">Los archivos se almacenan en Supabase Storage</p>
         <input
           ref={inputRef}
           type="file"
@@ -57,23 +57,23 @@ export default function FileUpload({ onUpload, path = '', accept = '*', multiple
       {files.length > 0 && (
         <div className="space-y-1">
           {files.map((item, i) => (
-            <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-sm">
+            <div key={i} className="flex items-center justify-between p-2 bg-surface-container-low rounded-lg text-body-md border border-outline-variant/10">
               <div className="flex items-center gap-2 min-w-0">
-                <File className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                <span className="truncate">{item.name}</span>
-                <span className="text-xs text-gray-400">({(item.size / 1024).toFixed(1)} KB)</span>
+                <File className="w-4 h-4 text-on-surface-variant flex-shrink-0" />
+                <span className="truncate text-on-surface">{item.name}</span>
+                <span className="text-caption text-on-surface-variant">({(item.size / 1024).toFixed(1)} KB)</span>
               </div>
               <div className="flex items-center gap-1">
                 {item.status === 'pending' && (
-                  <button onClick={() => handleUpload(i)} disabled={uploading} className="text-agency-600 hover:text-agency-800 text-xs font-medium px-2 py-1">
+                  <button onClick={() => handleUpload(i)} disabled={uploading} className="text-primary hover:text-primary/80 text-caption font-medium px-2 py-1">
                     {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Subir'}
                   </button>
                 )}
-                {item.status === 'uploading' && <Loader2 className="w-3.5 h-3.5 animate-spin text-agency-600" />}
-                {item.status === 'done' && <span className="text-xs text-green-600">✓</span>}
-                {item.status === 'error' && <span className="text-xs text-red-600">Error</span>}
-                <button onClick={() => removeFile(i)} className="p-1 hover:bg-gray-200 rounded">
-                  <X className="w-3 h-3 text-gray-400" />
+                {item.status === 'uploading' && <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />}
+                {item.status === 'done' && <span className="text-caption text-tertiary">✓</span>}
+                {item.status === 'error' && <span className="text-caption text-error">Error</span>}
+                <button onClick={() => removeFile(i)} className="p-1 hover:bg-surface-container-hover rounded transition-colors">
+                  <X className="w-3 h-3 text-on-surface-variant" />
                 </button>
               </div>
             </div>

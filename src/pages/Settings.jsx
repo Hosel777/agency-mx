@@ -36,80 +36,80 @@ export default function Settings() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in relative">
+      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none -z-10" />
+
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="page-title">Configuración</h1>
-          <p className="text-muted mt-0.5">Conecta tus servicios y configura la agencia virtual</p>
+          <h1 className="font-h1 text-h1 text-on-surface">Configuración</h1>
+          <p className="font-body-lg text-body-lg text-on-surface-variant">Conecta tus servicios y configura la agencia virtual</p>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-agency-50 to-agency-100 flex items-center justify-center">
-          <Sparkles className="w-6 h-6 text-agency-600" />
+        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Sparkles className="w-6 h-6 text-primary" />
         </div>
       </div>
 
-      <div className="card p-8 space-y-8">
-        {/* Supabase */}
+      <div className="glass-card rounded-2xl p-8 space-y-8">
         <div>
           <div className="flex items-center gap-3 mb-5">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-agency-50 to-agency-100 shadow-sm">
-              <Shield className="w-5 h-5 text-agency-600" />
+            <div className="p-2.5 rounded-xl bg-primary/10">
+              <Shield className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Conexión Supabase</h2>
-              <p className="text-xs text-gray-500">Base de datos y almacenamiento</p>
+              <h2 className="font-h3 text-h3 text-on-surface">Conexión Supabase</h2>
+              <p className="text-caption text-on-surface-variant">Base de datos y almacenamiento</p>
             </div>
           </div>
-          <div className="space-y-4 bg-surface-secondary rounded-2xl p-5 border border-gray-100">
+          <div className="space-y-4 bg-surface-container-low rounded-2xl p-5 border border-outline-variant/20">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wider">Supabase URL</label>
-              <input value={supabaseUrl} className="input-field bg-white/50 text-xs font-mono" readOnly />
+              <label className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1.5 block">Supabase URL</label>
+              <input value={supabaseUrl} className="input-field font-mono" readOnly />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wider">Supabase Anon Key</label>
-              <input value={supabaseKey} className="input-field bg-white/50 text-xs font-mono truncate" readOnly />
+              <label className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1.5 block">Supabase Anon Key</label>
+              <input value={supabaseKey} className="input-field font-mono truncate" readOnly />
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+            <div className="flex items-center gap-1.5 text-caption text-tertiary font-medium">
               <CheckCircle2 className="w-3.5 h-3.5" /> Conectado desde variables de entorno
             </div>
           </div>
         </div>
 
-        <div className="border-t border-gray-100" />
+        <div className="border-t border-outline-variant/20" />
 
-        {/* Anthropic */}
         <div>
           <div className="flex items-center gap-3 mb-5">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 shadow-sm">
-              <Bot className="w-5 h-5 text-amber-600" />
+            <div className="p-2.5 rounded-xl bg-secondary/10">
+              <Bot className="w-5 h-5 text-secondary" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">API Key (LLM)</h2>
-              <p className="text-xs text-gray-500">Los agentes usan el proveedor configurado (Claude o DeepSeek)</p>
+              <h2 className="font-h3 text-h3 text-on-surface">API Key (LLM)</h2>
+              <p className="text-caption text-on-surface-variant">Los agentes usan el proveedor configurado (Claude o DeepSeek)</p>
             </div>
           </div>
-          <div className="space-y-4 bg-surface-secondary rounded-2xl p-5 border border-gray-100">
+          <div className="space-y-4 bg-surface-container-low rounded-2xl p-5 border border-outline-variant/20">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wider">LLM API Key</label>
+              <label className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1.5 block">LLM API Key</label>
               <input
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
-                className="input-field bg-white/50 text-xs font-mono"
+                className="input-field font-mono"
                 placeholder="sk-ant-... o sk-..."
               />
             </div>
-            <p className="text-xs text-gray-400 flex items-center gap-1">
-              <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="text-agency-600 hover:text-agency-700 font-medium flex items-center gap-0.5">
+            <p className="text-caption text-on-surface-variant flex items-center gap-1">
+              <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 font-medium flex items-center gap-0.5">
                 Claude: Anthropic Console <ExternalLink className="w-3 h-3" />
               </a>
-              <span className="text-gray-300 mx-1">|</span>
-              <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-agency-600 hover:text-agency-700 font-medium flex items-center gap-0.5">
+              <span className="text-outline mx-1">|</span>
+              <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 font-medium flex items-center gap-0.5">
                 OpenRouter: openrouter.ai/keys <ExternalLink className="w-3 h-3" />
               </a>
             </p>
           </div>
         </div>
 
-        <div className="border-t border-gray-100 pt-6 flex justify-end">
+        <div className="border-t border-outline-variant/20 pt-6 flex justify-end">
           <button onClick={handleSave} disabled={saving} className="btn-primary">
             <Save className="w-4 h-4" />
             {saving ? 'Guardando...' : 'Guardar Configuración'}

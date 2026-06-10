@@ -23,34 +23,34 @@ export default function DeliverablePreview({ deliverable, onClose, onDeliver }) 
   const Icon = TYPE_ICONS[type] || FileText
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="bg-surface w-full max-w-5xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col mx-4 border border-outline-variant/20">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/20">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-agency-50 rounded-lg">
-              <Icon className="w-5 h-5 text-agency-600" />
+            <div className="p-2 bg-primary/10 rounded-xl">
+              <Icon className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h2 className="font-semibold text-lg">{deliverable.name}</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="font-h3 text-h3 text-on-surface">{deliverable.name}</h2>
+              <p className="text-body-md text-on-surface-variant">
                 {TYPE_LABELS[type]} — por {deliverable.agent_name}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg">
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="p-1 hover:bg-surface-container-hover rounded-lg transition-colors">
+            <X className="w-5 h-5 text-on-surface-variant" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 px-6 border-b bg-gray-50">
+        <div className="flex gap-1 px-6 border-b border-outline-variant/20 bg-surface-container-low">
           <button
             onClick={() => setTab('preview')}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-4 py-3 text-body-md font-medium border-b-2 transition-colors ${
               tab === 'preview'
-                ? 'border-agency-600 text-agency-700 bg-white'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-primary bg-surface'
+                : 'border-transparent text-on-surface-variant hover:text-on-surface'
             }`}
           >
             Vista Previa
@@ -58,10 +58,10 @@ export default function DeliverablePreview({ deliverable, onClose, onDeliver }) 
           {deliverable.content && (
             <button
               onClick={() => setTab('raw')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-4 py-3 text-body-md font-medium border-b-2 transition-colors ${
                 tab === 'raw'
-                  ? 'border-agency-600 text-agency-700 bg-white'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-primary text-primary bg-surface'
+                  : 'border-transparent text-on-surface-variant hover:text-on-surface'
               }`}
             >
               Código Fuente
@@ -70,7 +70,7 @@ export default function DeliverablePreview({ deliverable, onClose, onDeliver }) 
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6 min-h-[300px]">
+        <div className="flex-1 overflow-auto p-6 min-h-[300px] bg-surface">
           {tab === 'preview' ? (
             <PreviewContent deliverable={deliverable} />
           ) : (
@@ -79,17 +79,17 @@ export default function DeliverablePreview({ deliverable, onClose, onDeliver }) 
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-outline-variant/20 bg-surface-container-low">
+          <div className="flex items-center gap-2 text-body-md text-on-surface-variant">
             {deliverable.client_delivered ? (
-              <span className="flex items-center gap-1 text-green-600">
+              <span className="flex items-center gap-1 text-tertiary">
                 <FileCheck className="w-4 h-4" /> Entregado al cliente
               </span>
             ) : (
-              <span className={`px-2 py-1 rounded text-xs font-medium ${
-                deliverable.status === 'completed' ? 'bg-green-100 text-green-700' :
-                deliverable.status === 'approved' ? 'bg-blue-100 text-blue-700' :
-                'bg-yellow-100 text-yellow-700'
+              <span className={`px-2 py-1 rounded text-caption font-medium ${
+                deliverable.status === 'completed' ? 'badge-success' :
+                deliverable.status === 'approved' ? 'badge-info' :
+                'badge-warning'
               }`}>
                 {deliverable.status === 'completed' ? 'Completado' :
                  deliverable.status === 'approved' ? 'Aprobado' : 'Por revisar'}
@@ -102,7 +102,7 @@ export default function DeliverablePreview({ deliverable, onClose, onDeliver }) 
                 href={deliverable.file_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-secondary flex items-center gap-2 text-sm"
+                className="btn-secondary flex items-center gap-2 text-body-md"
               >
                 <Download className="w-4 h-4" /> Descargar
               </a>
@@ -110,7 +110,7 @@ export default function DeliverablePreview({ deliverable, onClose, onDeliver }) 
             {!deliverable.client_delivered && deliverable.status === 'approved' && onDeliver && (
               <button
                 onClick={() => onDeliver(deliverable.id)}
-                className="btn-primary flex items-center gap-2 text-sm"
+                className="btn-primary flex items-center gap-2 text-body-md"
               >
                 <ExternalLink className="w-4 h-4" /> Entregar al Cliente
               </button>
@@ -128,8 +128,8 @@ function PreviewContent({ deliverable }) {
   switch (type) {
     case 'html':
       return (
-        <div className="border rounded-lg overflow-hidden bg-white">
-          <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 border-b text-sm text-gray-500">
+        <div className="border border-outline-variant/20 rounded-lg overflow-hidden bg-surface">
+          <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-high border-b border-outline-variant/20 text-body-md text-on-surface-variant">
             <Globe className="w-4 h-4" /> Vista previa de página web
           </div>
           <iframe
@@ -143,18 +143,18 @@ function PreviewContent({ deliverable }) {
 
     case 'image':
       return (
-        <div className="flex items-center justify-center bg-gray-100 rounded-lg p-4 min-h-[300px]">
+        <div className="flex items-center justify-center bg-surface-container-high rounded-xl p-4 min-h-[300px]">
           {deliverable.file_url ? (
             <img
               src={deliverable.file_url}
               alt={deliverable.name}
-              className="max-w-full max-h-[500px] rounded-lg shadow-md"
+              className="max-w-full max-h-[500px] rounded-xl"
             />
           ) : (
-            <div className="text-center text-gray-400">
-              <ImageIcon className="w-16 h-16 mx-auto mb-2" />
+            <div className="text-center text-on-surface-variant">
+              <ImageIcon className="w-16 h-16 mx-auto mb-2 opacity-50" />
               <p>Vista previa de imagen</p>
-              <p className="text-sm">URL: {deliverable.content}</p>
+              <p className="text-body-md">URL: {deliverable.content}</p>
             </div>
           )}
         </div>
@@ -162,11 +162,11 @@ function PreviewContent({ deliverable }) {
 
     case 'code':
       return (
-        <div className="border rounded-lg overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-mono">
+        <div className="border border-outline-variant/20 rounded-lg overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-high text-on-surface text-body-md font-mono border-b border-outline-variant/20">
             <Code2 className="w-4 h-4" /> {deliverable.language || 'Código'}
           </div>
-          <pre className="p-4 bg-gray-50 overflow-auto max-h-[400px] text-sm">
+          <pre className="p-4 bg-surface overflow-auto max-h-[400px] text-body-md text-on-surface">
             <code>{deliverable.content}</code>
           </pre>
         </div>
@@ -175,14 +175,14 @@ function PreviewContent({ deliverable }) {
     case 'text':
     default:
       return (
-        <div className="prose prose-sm max-w-none">
+        <div>
           {deliverable.content ? (
-            <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+            <div className="whitespace-pre-wrap text-on-surface leading-relaxed text-body-md">
               {deliverable.content}
             </div>
           ) : (
-            <div className="text-center text-gray-400 py-12">
-              <FileText className="w-12 h-12 mx-auto mb-2" />
+            <div className="text-center text-on-surface-variant py-12">
+              <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
               <p>Sin contenido disponible</p>
             </div>
           )}
@@ -193,7 +193,7 @@ function PreviewContent({ deliverable }) {
 
 function RawContent({ deliverable }) {
   return (
-    <pre className="p-4 bg-gray-900 text-gray-100 rounded-lg overflow-auto max-h-[400px] text-sm font-mono">
+    <pre className="p-4 bg-surface-container-high text-on-surface rounded-xl overflow-auto max-h-[400px] text-body-md font-mono border border-outline-variant/20">
       <code>{typeof deliverable.content === 'string' ? deliverable.content : JSON.stringify(deliverable.content, null, 2)}</code>
     </pre>
   )

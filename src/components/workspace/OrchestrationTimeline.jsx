@@ -19,12 +19,12 @@ function TimelineNode({ log, isLast }) {
     <div className="relative flex gap-4 pb-6 group">
       {/* Vertical line */}
       {!isLast && (
-        <div className="absolute left-[15px] top-8 bottom-0 w-px bg-gradient-to-b from-gray-700 to-transparent" />
+        <div className="absolute left-[15px] top-8 bottom-0 w-px bg-gradient-to-b from-outline-variant/30 to-transparent" />
       )}
 
       {/* Icon bubble */}
       <div className="relative z-10 flex-shrink-0">
-        <div className={`w-8 h-8 rounded-full ${config.bg} bg-opacity-20 border-2 ${config.color} flex items-center justify-center shadow-lg shadow-${config.color}/20 group-hover:scale-110 transition-transform`}>
+        <div className={`w-8 h-8 rounded-full ${config.bg}/20 border-2 ${config.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
           <Icon className={`w-4 h-4 ${config.text}`} />
         </div>
       </div>
@@ -32,14 +32,14 @@ function TimelineNode({ log, isLast }) {
       {/* Content */}
       <div className="flex-1 min-w-0 pt-1">
         <div className="flex items-center gap-2 mb-1">
-          <span className={`text-xs font-semibold ${config.text}`}>
+          <span className={`text-caption font-semibold ${config.text}`}>
             {log.agent}
           </span>
-          <span className="text-[10px] text-gray-600 font-mono">
+          <span className="text-[10px] text-outline font-mono">
             {log.time}
           </span>
         </div>
-        <p className="text-xs text-gray-300 leading-relaxed">
+        <p className="text-body-md text-on-surface-variant leading-relaxed">
           {log.text}
         </p>
       </div>
@@ -87,19 +87,19 @@ function AgentGroupTimeline({ agentName, entries, isLast }) {
     <div className="mb-2">
       <button
         onClick={() => setExpanded(!expanded)}
-        className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg transition-colors ${
-          hasError ? 'bg-red-900/20 hover:bg-red-900/30' : 'bg-gray-800/50 hover:bg-gray-800'
+        className={`flex items-center gap-2 w-full px-3 py-2 rounded-xl transition-colors ${
+          hasError ? 'bg-error/10 hover:bg-error/20' : 'bg-surface-container-low hover:bg-surface-container-hover'
         }`}
       >
-        {expanded ? <ChevronDown className="w-3.5 h-3.5 text-gray-500" /> : <ChevronRight className="w-3.5 h-3.5 text-gray-500" />}
-        <span className="text-sm">{emoji}</span>
-        <span className="text-sm font-medium text-gray-200">{agentName}</span>
-        <span className="text-xs text-gray-500 ml-auto">{entries.length} eventos</span>
-        {hasError && <AlertTriangle className="w-3.5 h-3.5 text-red-400" />}
-        {entries.some(e => e.level === 'success') && <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />}
+        {expanded ? <ChevronDown className="w-3.5 h-3.5 text-outline" /> : <ChevronRight className="w-3.5 h-3.5 text-outline" />}
+        <span className="text-body-md">{emoji}</span>
+        <span className="text-body-md font-medium text-on-surface">{agentName}</span>
+        <span className="text-caption text-on-surface-variant ml-auto">{entries.length} eventos</span>
+        {hasError && <AlertTriangle className="w-3.5 h-3.5 text-error" />}
+        {entries.some(e => e.level === 'success') && <CheckCircle2 className="w-3.5 h-3.5 text-tertiary" />}
       </button>
       {expanded && (
-        <div className="ml-4 pl-6 border-l border-gray-800 mt-1">
+        <div className="ml-4 pl-6 border-l border-outline-variant/20 mt-1">
           {entries.map((log, i) => (
             <TimelineNode key={i} log={log} isLast={i === entries.length - 1 && isLast} />
           ))}
@@ -129,24 +129,24 @@ export default function OrchestrationTimeline({ logs, compact }) {
 
   if (logs.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-gray-950 text-gray-600">
-        <Clock className="w-10 h-10 mb-3 text-gray-700" />
-        <p className="text-sm font-medium">Esperando actividad de los agentes...</p>
-        <p className="text-xs text-gray-700 mt-1">Los logs aparecerán en tiempo real cuando se ejecute una orquestación</p>
+      <div className="h-full flex flex-col items-center justify-center bg-surface text-on-surface-variant">
+        <Clock className="w-10 h-10 mb-3 text-on-surface-variant/30" />
+        <p className="text-body-md font-medium">Esperando actividad de los agentes...</p>
+        <p className="text-caption text-on-surface-variant/60 mt-1">Los logs aparecerán en tiempo real cuando se ejecute una orquestación</p>
       </div>
     )
   }
 
   return (
-    <div className="h-full bg-gray-950 text-gray-300 overflow-auto p-4">
+    <div className="h-full bg-surface text-on-surface overflow-auto p-4">
       {/* View mode toggle */}
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-800">
-        <Bot className="w-4 h-4 text-cyan-400" />
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Timeline de Orquestación</span>
-        <span className="text-[10px] text-gray-600 ml-auto">{logs.length} eventos</span>
+      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-outline-variant/20">
+        <Bot className="w-4 h-4 text-primary" />
+        <span className="text-caption font-semibold text-on-surface-variant uppercase tracking-wider">Timeline de Orquestación</span>
+        <span className="text-[10px] text-outline ml-auto">{logs.length} eventos</span>
         <button
           onClick={() => setViewMode(viewMode === 'grouped' ? 'flat' : 'grouped')}
-          className="text-[10px] px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-400 transition-colors"
+          className="text-[10px] px-2 py-1 rounded bg-surface-variant hover:bg-surface-container-hover text-on-surface-variant transition-colors"
         >
           {viewMode === 'grouped' ? 'Vista plana' : 'Por agente'}
         </button>
@@ -170,19 +170,19 @@ export default function OrchestrationTimeline({ logs, compact }) {
       ) : (
         <div className="space-y-0">
           {logs.map((log, i) => (
-            <div key={i} className="flex gap-3 py-1.5 px-2 rounded hover:bg-gray-900/50 group">
-              <span className="text-[10px] text-gray-600 font-mono w-16 shrink-0 pt-0.5">
+            <div key={i} className="flex gap-3 py-1.5 px-2 rounded hover:bg-surface-container-hover group">
+              <span className="text-[10px] text-outline font-mono w-16 shrink-0 pt-0.5">
                 {log.time}
               </span>
               <span className={`text-[10px] font-semibold w-28 shrink-0 truncate pt-0.5 ${
-                log.level === 'error' ? 'text-red-400' :
-                log.level === 'warn' ? 'text-yellow-400' :
-                log.level === 'success' ? 'text-green-400' :
-                'text-cyan-400'
+                log.level === 'error' ? 'text-error' :
+                log.level === 'warn' ? 'text-warning' :
+                log.level === 'success' ? 'text-tertiary' :
+                'text-primary'
               }`}>
                 [{log.agent}]
               </span>
-              <span className="text-xs text-gray-400 leading-relaxed">
+              <span className="text-body-md text-on-surface-variant leading-relaxed">
                 {log.text}
               </span>
             </div>

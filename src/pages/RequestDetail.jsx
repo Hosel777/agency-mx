@@ -20,24 +20,24 @@ export default function RequestDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 text-agency-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     )
   }
 
   if (!req) {
     return (
-      <div className="text-center py-12 text-gray-400">Solicitud no encontrada</div>
+      <div className="text-center py-12 text-on-surface-variant">Solicitud no encontrada</div>
     )
   }
 
   return (
     <div className="space-y-3 h-full min-h-0 flex flex-col">
       <div className="flex items-center justify-between flex-shrink-0">
-        <Link to="/" className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
+        <Link to="/" className="text-sm text-on-surface-variant hover:text-primary flex items-center gap-1 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Dashboard
         </Link>
-        <span className="text-xs text-gray-400">
+        <span className="text-caption text-on-surface-variant">
           {req.client_name || 'Sin cliente'} — {req.project_type} — {new Date(req.created_at).toLocaleDateString()}
         </span>
       </div>

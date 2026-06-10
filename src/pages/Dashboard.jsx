@@ -9,48 +9,40 @@ import {
   Globe, MessageSquare, Play, ExternalLink
 } from 'lucide-react'
 import { STATUS_LABELS, STATUS_COLORS } from '../utils/constants'
-import AGENTS_HIERARCHY from '../utils/agents'
 
 function StatCard({ label, value, icon: Icon, color, bg, gradient }) {
   return (
-    <div className="card p-5 flex items-center gap-4 group hover:translate-y-[-2px] transition-all duration-300">
-      <div className={`p-3.5 rounded-2xl ${bg} ${gradient || ''} shadow-sm`}>
-        <Icon className={`w-6 h-6 ${color}`} />
+    <div className="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-all duration-300 group cursor-default">
+      <div className="flex items-center justify-between mb-4">
+        <div className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center ${color}`}>
+          <Icon className="w-5 h-5" />
+        </div>
+        <span className="text-secondary text-label-sm font-label-sm flex items-center gap-1 opacity-80">
+          <TrendingUp className="w-3 h-3" /> online
+        </span>
       </div>
-      <div>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-        <p className="text-sm text-gray-500 font-medium">{label}</p>
+      <div className="space-y-1">
+        <p className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">{label}</p>
+        <p className="text-[32px] font-bold text-on-surface">{value}</p>
       </div>
     </div>
   )
 }
 
-function timeAgo(date) {
-  const diff = Date.now() - new Date(date).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 60) return `Hace ${mins}m`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `Hace ${hours}h`
-  const days = Math.floor(hours / 24)
-  return `Hace ${days}d`
-}
-
 function MetricCard({ label, value, sublabel, icon: Icon, color, bg, trend }) {
   return (
-    <div className="card p-5 flex items-center gap-4 group hover:translate-y-[-2px] transition-all duration-300">
-      <div className={`p-3.5 rounded-2xl ${bg} shadow-sm`}>
-        <Icon className={`w-6 h-6 ${color}`} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-2xl font-bold text-gray-900">{value ?? '—'}</p>
-        <p className="text-sm text-gray-500 font-medium">{label}</p>
-        {sublabel && <p className="text-xs text-gray-400 mt-0.5">{sublabel}</p>}
-      </div>
-      {trend && (
-        <div className="ml-auto text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-          {trend}
+    <div className="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-all duration-300 group cursor-default">
+      <div className="flex items-center justify-between mb-4">
+        <div className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center ${color}`}>
+          <Icon className="w-5 h-5" />
         </div>
-      )}
+        {trend && <span className={`text-label-sm font-label-sm flex items-center gap-1 ${trend.color}`}>{trend.label}</span>}
+      </div>
+      <div className="space-y-1">
+        <p className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">{label}</p>
+        <p className="text-[32px] font-bold text-on-surface">{value ?? '—'}</p>
+        {sublabel && <p className="text-caption text-on-surface-variant mt-1">{sublabel}</p>}
+      </div>
     </div>
   )
 }
@@ -76,14 +68,9 @@ function DemoButton() {
     <button
       onClick={handleDemo}
       disabled={loading}
-      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm
-                 text-white bg-gradient-to-r from-emerald-600 to-emerald-500
-                 hover:from-emerald-700 hover:to-emerald-600
-                 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30
-                 active:scale-[0.97] transition-all duration-200
-                 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="bg-surface-container-high border border-dashed border-outline-variant text-on-surface-variant px-6 py-2.5 rounded-xl font-label-md text-label-md hover:border-primary hover:text-primary transition-all active:scale-95"
     >
-      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+      {loading ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : <Zap className="w-4 h-4 inline mr-2" />}
       {loading ? 'Creando demo...' : 'Demo Rápida ⚡'}
     </button>
   )
@@ -93,13 +80,23 @@ function StatBar({ label, count, total, color }) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0
   return (
     <div className="flex items-center gap-3">
-      <span className="text-xs text-gray-500 w-28 shrink-0">{label}</span>
-      <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+      <span className="text-caption text-on-surface-variant w-28 shrink-0">{label}</span>
+      <div className="flex-1 h-2 rounded-full bg-surface-variant overflow-hidden">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-xs font-medium text-gray-700 w-8 text-right">{count}</span>
+      <span className="text-label-sm font-label-sm text-on-surface w-8 text-right">{count}</span>
     </div>
   )
+}
+
+function timeAgo(date) {
+  const diff = Date.now() - new Date(date).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 60) return `Hace ${mins}m`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `Hace ${hours}h`
+  const days = Math.floor(hours / 24)
+  return `Hace ${days}d`
 }
 
 export default function Dashboard() {
@@ -127,16 +124,18 @@ export default function Dashboard() {
   const computing = loading || statsLoading
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header section */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-gutter animate-fade-in relative">
+      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none -z-10" />
+
+      {/* Header */}
+      <div className="flex items-end justify-between">
         <div>
-          <h1 className="page-title">Dashboard</h1>
-          <p className="text-muted mt-0.5">Bienvenido a Agency MX — Tu agencia virtual de marketing con IA</p>
+          <h1 className="font-h1 text-h1 text-on-surface">Enterprise Overview</h1>
+          <p className="font-body-lg text-body-lg text-on-surface-variant mt-1">AI-driven marketing performance for the current billing cycle.</p>
         </div>
         <div className="flex items-center gap-3">
           <DemoButton />
-          <Link to="/nueva-solicitud" className="btn-primary">
+          <Link to="/nueva-solicitud" className="bg-primary text-on-primary px-6 py-2.5 rounded-xl font-label-md text-label-md shadow-lg shadow-primary/20 hover:brightness-110 transition-all active:scale-95 flex items-center gap-2">
             <PlusCircle className="w-4 h-4" />
             Nueva Solicitud
           </Link>
@@ -145,167 +144,150 @@ export default function Dashboard() {
 
       {computing ? (
         <div className="flex items-center justify-center h-32">
-          <div className="flex items-center gap-3 text-gray-400">
+          <div className="flex items-center gap-3 text-on-surface-variant">
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span className="text-sm">Cargando métricas...</span>
+            <span className="text-body-md">Cargando métricas...</span>
           </div>
         </div>
       ) : (
         <>
           {/* Row 1: Core metrics */}
-          <div className="grid grid-cols-4 gap-4">
-            <MetricCard label="Solicitudes" value={reqStats.total} icon={ClipboardList} color="text-agency-600" bg="bg-agency-50" />
-            <MetricCard label="En Progreso" value={reqStats.inProgress} icon={Clock} color="text-amber-600" bg="bg-amber-50" />
-            <MetricCard label="Por Revisar" value={reqStats.pending + reqStats.quoting} icon={AlertCircle} color="text-purple-600" bg="bg-purple-50" />
-            <MetricCard label="Completadas" value={reqStats.completed} icon={CheckCircle2} color="text-emerald-600" bg="bg-emerald-50" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+            <StatCard label="Solicitudes" value={reqStats.total} icon={ClipboardList} color="text-primary" bg="bg-primary/10" />
+            <StatCard label="En Progreso" value={reqStats.inProgress} icon={Clock} color="text-tertiary" bg="bg-tertiary/10" />
+            <StatCard label="Por Revisar" value={reqStats.pending + reqStats.quoting} icon={AlertCircle} color="text-secondary" bg="bg-secondary/10" />
+            <StatCard label="Completadas" value={reqStats.completed} icon={CheckCircle2} color="text-secondary-container" bg="bg-secondary-container/10" />
           </div>
 
           {/* Row 2: Enterprise metrics */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
             <MetricCard
               label="Agentes Activados"
               value={stats?.uniqueAgentsUsed ?? '—'}
               sublabel={`de ${stats?.totalAgentsAvailable ?? 112} disponibles`}
               icon={Bot}
-              color="text-cyan-600"
-              bg="bg-cyan-50"
+              color="text-primary-container"
+              bg="bg-primary-container/10"
             />
             <MetricCard
               label="Entregables Generados"
               value={stats?.totalDeliverables ?? '—'}
               sublabel={`${stats?.totalAgentMessages ?? 0} mensajes de agentes`}
               icon={FileText}
-              color="text-violet-600"
-              bg="bg-violet-50"
+              color="text-secondary"
+              bg="bg-secondary/10"
             />
             <MetricCard
               label="Tiempo Promedio"
               value={stats?.avgCompletionTimeMinutes ? `${stats.avgCompletionTimeMinutes}m` : '—'}
               sublabel={stats?.completedRequests > 0 ? `en ${stats.completedRequests} proyectos` : 'sin datos aún'}
               icon={Activity}
-              color="text-rose-600"
-              bg="bg-rose-50"
+              color="text-tertiary"
+              bg="bg-tertiary/10"
             />
           </div>
 
           {/* Row 3: Source breakdown + efficiency */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="card p-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+            <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100">
-                  <BarChart3 className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <BarChart3 className="w-5 h-5" />
                 </div>
-                <h3 className="font-semibold text-gray-900">Origen de Solicitudes</h3>
+                <h3 className="font-h3 text-h3 text-on-surface">Origen de Solicitudes</h3>
               </div>
               <div className="space-y-3">
-                <StatBar label="SocialPulse" count={stats?.socialPulseCount ?? 0} total={reqStats.total || 1} color="bg-blue-500" />
-                <StatBar label="Manual / Demo" count={stats?.manualCount ?? 0} total={reqStats.total || 1} color="bg-agency-500" />
+                <StatBar label="SocialPulse" count={stats?.socialPulseCount ?? 0} total={reqStats.total || 1} color="bg-primary" />
+                <StatBar label="Manual / Demo" count={stats?.manualCount ?? 0} total={reqStats.total || 1} color="bg-secondary" />
               </div>
             </div>
-            <div className="card p-5">
+            <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100">
-                  <TrendingUp className="w-5 h-5 text-emerald-600" />
+                <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+                  <TrendingUp className="w-5 h-5" />
                 </div>
-                <h3 className="font-semibold text-gray-900">Eficiencia</h3>
+                <h3 className="font-h3 text-h3 text-on-surface">Eficiencia</h3>
               </div>
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Agentes disponibles</span>
-                  <span className="font-semibold text-gray-800">{stats?.totalAgentsAvailable ?? 112}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Agentes únicos usados</span>
-                  <span className="font-semibold text-gray-800">{stats?.uniqueAgentsUsed ?? 0}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Tasa de finalización</span>
-                  <span className="font-semibold text-gray-800">
-                    {reqStats.total > 0 ? Math.round((reqStats.completed / reqStats.total) * 100) : 0}%
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Integración SocialPulse</span>
-                  <span className={`font-semibold ${stats?.socialPulseCount > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                    {stats?.socialPulseCount > 0 ? 'Activa' : 'Sin datos'}
-                  </span>
-                </div>
+                {[
+                  ['Agentes disponibles', stats?.totalAgentsAvailable ?? 112],
+                  ['Agentes únicos usados', stats?.uniqueAgentsUsed ?? 0],
+                  ['Tasa de finalización', reqStats.total > 0 ? `${Math.round((reqStats.completed / reqStats.total) * 100)}%` : '0%'],
+                  ['Integración SocialPulse', stats?.socialPulseCount > 0 ? 'Activa' : 'Sin datos'],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex items-center justify-between">
+                    <span className="text-body-md text-on-surface-variant">{label}</span>
+                    <span className={`font-semibold text-body-md ${typeof value === 'string' && value === 'Sin datos' ? 'text-outline' : 'text-on-surface'}`}>{value}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
           {/* Recent Requests */}
-          <div className="card overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="section-title">Solicitudes Recientes</h2>
+          <div className="glass-card rounded-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between">
+              <h3 className="font-h3 text-h3 text-on-surface">Solicitudes Recientes</h3>
               {requests.length > 0 && (
-                <span className="text-xs text-gray-400 font-medium">{requests.length} total</span>
+                <span className="text-caption text-on-surface-variant">{requests.length} total</span>
               )}
             </div>
 
             {requests.length === 0 ? (
               <div className="px-6 py-16 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-4">
-                  <Bot className="w-8 h-8 text-gray-300" />
+                <div className="w-16 h-16 rounded-2xl bg-surface-variant flex items-center justify-center mx-auto mb-4">
+                  <Bot className="w-8 h-8 text-on-surface-variant" />
                 </div>
-                <p className="text-gray-500 font-medium">No hay solicitudes aún</p>
-                <p className="text-sm text-gray-400 mt-1">Crea tu primer proyecto para empezar</p>
+                <p className="font-medium text-on-surface-variant">No hay solicitudes aún</p>
+                <p className="text-caption text-on-surface-variant mt-1">Crea tu primer proyecto para empezar</p>
                 <div className="flex items-center justify-center gap-3 mt-4">
                   <button
                     onClick={async () => {
                       const result = await createDemoRequest()
                       if (result.success) navigate(`/solicitud/${result.requestId}`)
                     }}
-                    className="btn-primary"
+                    className="bg-primary text-on-primary px-5 py-2.5 rounded-xl font-label-md text-label-md shadow-lg shadow-primary/20 hover:brightness-110 transition-all"
                   >
-                    <Zap className="w-4 h-4" />
+                    <Zap className="w-4 h-4 inline mr-2" />
                     Demo Rápida ⚡
                   </button>
-                  <Link to="/nueva-solicitud" className="btn-secondary">
+                  <Link to="/nueva-solicitud" className="bg-surface-container-high border border-dashed border-outline-variant text-on-surface-variant px-5 py-2.5 rounded-xl font-label-md text-label-md inline-flex items-center gap-2">
                     <PlusCircle className="w-4 h-4" />
                     Crear solicitud
                   </Link>
                 </div>
               </div>
             ) : (
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-outline-variant/10">
                 {requests.slice(0, 10).map((req, i) => (
                   <Link
                     key={req.id}
                     to={`/solicitud/${req.id}`}
-                    className="flex items-center justify-between px-6 py-4 hover:bg-gray-50/80 transition-colors group"
+                    className="flex items-center justify-between px-6 py-4 hover:bg-surface-bright/50 transition-colors group"
                     style={{ animationDelay: `${i * 50}ms` }}
                   >
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${
-                        req.source === 'socialpulse' ? 'from-blue-50 to-blue-100' : 'from-agency-50 to-agency-100'
-                      } flex items-center justify-center flex-shrink-0`}>
-                        {req.source === 'socialpulse' ? (
-                          <Globe className="w-5 h-5 text-blue-600" />
-                        ) : (
-                          <FileText className="w-5 h-5 text-agency-600" />
-                        )}
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        req.source === 'socialpulse' ? 'bg-primary/10 text-primary' : 'bg-surface-variant text-on-surface-variant'
+                      }`}>
+                        {req.source === 'socialpulse' ? <Globe className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{req.title}</p>
-                        <p className="text-sm text-gray-500 flex items-center gap-2">
+                        <p className="font-body-md font-medium text-on-surface truncate">{req.title}</p>
+                        <p className="text-caption text-on-surface-variant flex items-center gap-2">
                           <span>{req.client_name || 'Sin cliente'}</span>
-                          <span className="text-gray-300">—</span>
+                          <span className="opacity-30">—</span>
                           <span>{timeAgo(req.created_at)}</span>
-                          {req.source === 'socialpulse' && (
-                            <span className="text-xs text-blue-500 font-medium">🌐 SocialPulse</span>
-                          )}
-                          {req.source === 'demo' && (
-                            <span className="text-xs text-emerald-500 font-medium">⚡ Demo</span>
-                          )}
+                          {req.source === 'socialpulse' && <span className="text-primary text-label-sm">🌐 SocialPulse</span>}
+                          {req.source === 'demo' && <span className="text-secondary text-label-sm">⚡ Demo</span>}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[req.status]}`}>
+                      <span className={`px-2.5 py-1 rounded-full text-label-sm font-label-sm ${STATUS_COLORS[req.status]}`}>
                         {STATUS_LABELS[req.status]}
                       </span>
-                      <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-agency-500 group-hover:translate-x-0.5 transition-all" />
+                      <ArrowRight className="w-4 h-4 text-outline group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                     </div>
                   </Link>
                 ))}
